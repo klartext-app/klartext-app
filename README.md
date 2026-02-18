@@ -37,6 +37,15 @@ npm run tauri build
 
 Die gebündelte App liegt danach unter `src-tauri/target/release/` (Windows: `.exe`, macOS: `.app`).
 
+## Installation für Endnutzer (macOS, Homebrew)
+
+```bash
+brew tap klartext-app/klartext
+brew install --cask klartext
+```
+
+Anleitung zum Einrichten des Taps (SHA256, neue Releases): **[docs/INSTALL.md](docs/INSTALL.md)**.
+
 ## Projektstruktur
 
 - `src/` – React-Frontend (Vite + TypeScript)
