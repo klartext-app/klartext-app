@@ -1,0 +1,5 @@
+# Erlaubt das Lesen per Drag & Drop geworfener Dateien (.json, .xml, .xsl, .txt)
+[[permission]]
+identifier = "allow-read-dropped-file"
+description = "Ermöglicht das Lesen von per Drag & Drop auf das Fenster geworfenen Dateien (nur .json, .xml, .xsl, .txt)."
+commands.allow = ["read_dropped_file"]

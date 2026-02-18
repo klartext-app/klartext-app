@@ -1,0 +1,554 @@
+/* Midnight Theme – sehr dunkler Hintergrund, App-weit */
+:root {
+  --titlebar-height: 36px;
+  --toolbar-height: 44px;
+  --statusbar-height: 22px;
+  --bg: #0f111a;
+  --bg-elevated: #161922;
+  --border: #2a2d3a;
+  --border-subtle: #1e2129;
+  --text: #e6e6e6;
+  --text-muted: #8b8f99;
+  --accent: #5b9bd5;
+  --accent-hover: #7eb8da;
+  --font-ui: "SF Pro Text", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
+body {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Titlebar – Vibrancy */
+.titlebar {
+  height: var(--titlebar-height);
+  min-height: var(--titlebar-height);
+  background: rgba(15, 17, 26, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  -webkit-app-region: drag;
+  app-region: drag;
+  user-select: none;
+}
+
+.titlebar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 12px;
+}
+
+.titlebar-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.titlebar-right {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+.titlebar-btn {
+  width: 46px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  transition: background 0.15s;
+}
+
+.titlebar-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.titlebar-btn.close:hover {
+  background: #c42b2b;
+  color: #fff;
+}
+
+.titlebar-browser-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding-right: 12px;
+}
+
+/* Toolbar – Vibrancy, Ghost-Buttons */
+.toolbar {
+  height: var(--toolbar-height);
+  min-height: var(--toolbar-height);
+  background: rgba(22, 25, 34, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+}
+
+.toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.toolbar-btn.ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-muted);
+}
+
+.toolbar-btn.ghost:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+}
+
+.toolbar-btn.ghost:active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.toolbar-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+}
+
+.toolbar-btn:active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.toolbar-btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.toolbar-btn.primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.toolbar-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 4px;
+}
+
+.toolbar-error {
+  color: #e06c75;
+  font-size: 12px;
+}
+
+/* Checkbox – minimalistisch, macOS-Look */
+.toolbar-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.toolbar-checkbox input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.toolbar-checkbox:hover {
+  color: var(--text);
+}
+
+/* Tab bar – Vibrancy */
+.tab-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  min-height: 32px;
+  background: rgba(15, 17, 26, 0.9);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 4px 0 8px;
+  overflow-x: auto;
+  /* Scrollbar (und Pfeile) ausblenden – Tabs per Mausrad/Touch scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.tab-bar::-webkit-scrollbar {
+  display: none;
+  height: 0;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px 8px;
+  margin: 0 2px -1px 0;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  background: var(--bg);
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  max-width: 160px;
+  min-width: 60px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.tab:hover {
+  color: var(--text);
+  background: var(--bg-elevated);
+}
+
+.tab-active {
+  background: var(--bg-elevated);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.tab-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.tab-close {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+
+/* Editor area – nimmt restlichen Platz in .main-content */
+.editor-wrap {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  position: relative;
+  height: 100%;
+}
+
+/* Monaco-Scrollbar-Pfeile ausblenden (Scrollbar selbst bleibt sichtbar) - mit höchster Spezifität */
+.editor-wrap .monaco-editor .monaco-scrollable-element > .scrollbar > .scra,
+.editor-wrap .monaco-editor .monaco-scrollable-element > .scrollbar > .arrow-background,
+.editor-wrap .monaco-scrollable-element > .scrollbar.vertical > .scra,
+.editor-wrap .monaco-scrollable-element > .scrollbar.horizontal > .scra {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Diff-View */
+.diff-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.diff-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: rgba(22, 25, 34, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.diff-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.diff-editor-container {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Statusbar – Vibrancy */
+.statusbar {
+  height: var(--statusbar-height);
+  min-height: var(--statusbar-height);
+  background: rgba(22, 25, 34, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 0;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.statusbar-item {
+  padding: 0 8px;
+}
+
+.statusbar-sep {
+  width: 1px;
+  height: 12px;
+  background: var(--border-subtle);
+}
+
+.statusbar-item:first-child {
+  padding-left: 0;
+}
+
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.toolbar-btn.active {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--accent);
+}
+
+/* Breadcrumbs */
+.breadcrumbs-bar {
+  min-height: 24px;
+  padding: 2px 12px;
+  background: rgba(22, 25, 34, 0.85);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+}
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0;
+  color: var(--text-muted);
+}
+
+.breadcrumbs-sep {
+  color: var(--border);
+  user-select: none;
+}
+
+.breadcrumbs-item {
+  color: var(--text);
+}
+
+/* Main content: Sidebar + Editor – muss Höhe haben, damit Editor sichtbar ist */
+.main-content {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  height: 0; /* Flex-Kind: nimmt verbleibenden Platz */
+  overflow: hidden;
+}
+
+.sidebar {
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  background: var(--bg-elevated);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-resizer {
+  width: 6px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  background: var(--border-subtle);
+  transition: background 0.15s;
+  position: relative;
+}
+
+.sidebar-resizer:hover,
+.sidebar-resizer.active {
+  background: var(--accent);
+}
+
+.sidebar-resizer::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: transparent;
+}
+
+.sidebar-resizer:hover::after,
+.sidebar-resizer.active::after {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Document Outline – Midnight */
+.document-outline {
+  flex: 1;
+  overflow: auto;
+  padding: 8px;
+  font-family: var(--font-ui);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) var(--border-subtle);
+}
+
+.document-outline::-webkit-scrollbar {
+  width: 8px;
+}
+
+.document-outline::-webkit-scrollbar-track {
+  background: var(--border-subtle);
+}
+
+.document-outline::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.document-outline::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+.document-outline-header {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+  padding: 0 4px;
+}
+
+.document-outline-empty {
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 8px;
+}
+
+.document-outline-tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.document-outline-item {
+  margin: 0;
+}
+
+.document-outline-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  color: var(--text);
+}
+
+.document-outline-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--accent-hover);
+}
+
+.document-outline-toggle {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.document-outline-toggle:hover {
+  color: var(--text);
+}
+
+.document-outline-dot {
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+}
+
+.document-outline-label {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
