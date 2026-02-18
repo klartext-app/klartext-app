@@ -1,6 +1,6 @@
 interface StatusBarProps {
   lineCount: number;
-  format: "JSON" | "XML" | "Plain Text";
+  format: "JSON" | "XML" | "Plain Text" | "YAML";
   cursorLine: number;
   cursorColumn: number;
 }
