@@ -57,7 +57,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEZGMUU2RTgyMUYzODQxMjMKUldRalFUZ2ZnbTRlLy8yMjFrMDBQRzQ4ck4rdUdVSFZ2c2NTdFRoY2JlVVNnRldDd1c5aXI2TTUK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEZEODcxODEwOUZGN0E4ODgKUldTSXFQZWZFQmlIL2E4NWsrS2YrV1lIMTFyZ3kzSWYzenpza0YvcjV5ODN6UWdBZTFTVjJ1YXAK",
       "endpoints": [
         "https://github.com/klartext-app/klartext-app/releases/latest/download/latest.json"
       ]
