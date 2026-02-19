@@ -407,23 +407,6 @@ export default function App() {
     );
   }, [activeId, activeTab.filePath, activeTab.content]);
 
-  const runFormat = useCallback(
-    (fn: (content: string) => string) => {
-      setError(null);
-      const content = editorApiRef.current?.getValue() ?? activeTab.content;
-      try {
-        const formatted = fn(content);
-        editorApiRef.current?.setValue(formatted);
-        setTabs((prev) =>
-          prev.map((t) => (t.id === activeId ? { ...t, content: formatted } : t))
-        );
-      } catch {
-        setError(language === "de" ? "Das Zielformat wurde nicht erkannt." : "Target format not recognized.");
-      }
-    },
-    [activeId, activeTab.content, language]
-  );
-
   const handleFormatJson = useCallback(() => {
     const current = tabs.find((t) => t.id === activeId) ?? tabs[0];
     if (!current) return;
