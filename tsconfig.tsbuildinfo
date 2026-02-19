@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/editor.tsx","./src/titlebar.tsx","./src/formatters.ts","./src/main.tsx","./src/vite-env.d.ts"],"version":"5.6.3"}
+{"root":["./src/app.tsx","./src/breadcrumbs.tsx","./src/diffeditorview.tsx","./src/documentoutline.tsx","./src/editor.tsx","./src/errorboundary.tsx","./src/statusbar.tsx","./src/titlebar.tsx","./src/fileservice.ts","./src/formatters.ts","./src/main.tsx","./src/outline.ts","./src/usedragdrop.ts","./src/usepersistedtabs.ts","./src/vite-env.d.ts"],"version":"5.6.3"}

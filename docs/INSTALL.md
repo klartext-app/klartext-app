@@ -11,6 +11,26 @@ brew tap klartext-app/klartext
 brew install --cask klartext
 ```
 
+### macOS Gatekeeper-Hinweis (unsignierte App)
+
+Da Klartext aktuell **nicht** mit einem Apple-Developer-Zertifikat signiert ist, kann macOS beim ersten Start eine Warnung anzeigen („Klartext ist beschädigt und kann nicht geöffnet werden“ oder „App stammt von einem nicht verifizierten Entwickler“).
+
+So kannst du Klartext trotzdem starten:
+
+**Variante 1 (empfohlen, ohne Terminal):**
+
+1. Im Finder zu `Programme` → `Klartext.app` navigieren.
+2. Rechtsklick auf `Klartext.app` → **Öffnen**.
+3. Im angezeigten Dialog erneut auf **Öffnen** klicken.
+
+**Variante 2 (Terminal, für Poweruser):**
+
+```bash
+sudo xattr -r -d com.apple.quarantine "/Applications/Klartext.app"
+```
+
+Danach lässt sich Klartext normal starten.
+
 ---
 
 ## Tap einrichten (einmalig)

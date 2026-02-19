@@ -59,6 +59,17 @@ export default function App() {
   const [diffMode, setDiffMode] = useState(false);
   const [diffOriginalContent, setDiffOriginalContent] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const FONT_SIZE_KEY = "klartext-font-size";
+  const MIN_FONT_SIZE = 10;
+  const MAX_FONT_SIZE = 28;
+  const defaultFontSize = (() => {
+    try {
+      const v = parseInt(localStorage.getItem(FONT_SIZE_KEY) ?? "14", 10);
+      if (Number.isFinite(v)) return Math.min(MAX_FONT_SIZE, Math.max(MIN_FONT_SIZE, v));
+    } catch {}
+    return 14;
+  })();
+  const [fontSize, setFontSize] = useState(defaultFontSize);
   const SIDEBAR_WIDTH_KEY = "klartext-sidebar-width";
   const MIN_SIDEBAR = 150;
   const MAX_SIDEBAR = 500;
@@ -76,6 +87,27 @@ export default function App() {
   const sidebarWidthDuringDrag = useRef(sidebarWidth);
 
   usePersistedTabs(tabs, activeId, setTabs, setActiveId);
+
+  const updateFontSize = useCallback(
+    (updater: (current: number) => number) => {
+      setFontSize((current) => {
+        const next = updater(current);
+        try {
+          localStorage.setItem(FONT_SIZE_KEY, String(next));
+        } catch {}
+        return next;
+      });
+    },
+    []
+  );
+
+  const increaseFontSize = useCallback(() => {
+    updateFontSize((current) => Math.min(MAX_FONT_SIZE, current + 1));
+  }, [updateFontSize]);
+
+  const decreaseFontSize = useCallback(() => {
+    updateFontSize((current) => Math.max(MIN_FONT_SIZE, current - 1));
+  }, [updateFontSize]);
 
   useEffect(() => {
     if (tabs.length === 0) {
@@ -407,6 +439,26 @@ export default function App() {
           />
           <span>Auto-Format</span>
         </label>
+        <div className="toolbar-sep" />
+        <div className="toolbar-fontsize">
+          <button
+            type="button"
+            className="toolbar-btn ghost"
+            onClick={decreaseFontSize}
+            title="Schriftgröße verkleinern"
+          >
+            A-
+          </button>
+          <span className="toolbar-fontsize-label">{fontSize}px</span>
+          <button
+            type="button"
+            className="toolbar-btn ghost"
+            onClick={increaseFontSize}
+            title="Schriftgröße vergrößern"
+          >
+            A+
+          </button>
+        </div>
         {error && (
           <>
             <div className="toolbar-sep" />
@@ -473,6 +525,7 @@ export default function App() {
             value={activeTab.content}
             onChange={setActiveContent}
             language={activeTab.language}
+            fontSize={fontSize}
             autoFormatOnPaste={autoFormatOnPaste}
             onPasteFormatted={handlePasteFormatted}
             onCursorChange={(line, column) => setCursor({ line, column })}

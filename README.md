@@ -55,6 +55,20 @@ brew tap klartext-app/klartext
 brew install --cask klartext
 ```
 
+**Hinweis (macOS Gatekeeper, unsignierte App):**  
+Klartext ist derzeit nicht mit einem Apple-Developer-Zertifikat signiert. macOS kann daher beim ersten Start melden, dass die App beschädigt sei oder von einem nicht verifizierten Entwickler stammt.
+
+So kannst du die App trotzdem starten:
+
+- Im Finder zu `Programme` → `Klartext.app` gehen
+- Rechtsklick → **Öffnen** → im Dialog erneut **Öffnen** wählen
+
+Alternativ im Terminal:
+
+```bash
+sudo xattr -r -d com.apple.quarantine "/Applications/Klartext.app"
+```
+
 ### Windows & macOS (Manuell)
 
 Lade die Installer von den [GitHub Releases](https://github.com/klartext-app/klartext-app/releases) herunter:
@@ -132,6 +146,14 @@ Klartext/
     ├── INSTALL.md         # Homebrew-Installation
     └── UPDATE-SIGNING.md  # In-App-Updates einrichten
 ```
+
+## Release-Skripte (nur für Maintainer)
+
+Im Ordner `scripts/` liegen kleine Hilfs-Skripte, die **nicht** Teil der Laufzeit-App sind, sondern nur für Build/Release genutzt werden:
+
+- `scripts/update-version.mjs` – setzt Version in `package.json` und `src-tauri/tauri.conf.json` anhand des Tags (wird in der GitHub Action `release.yml` verwendet).
+- `scripts/ensure-windows-ico.mjs` – erzeugt bei Bedarf `src-tauri/icons/icon.ico` aus `32x32.png` (wird im Windows-Job der GitHub Action verwendet).
+- `scripts/update-homebrew-cask.mjs` – Hilfsskript, um SHA256-Hashes der macOS-`.dmg`-Dateien zu berechnen und für den Homebrew-Tap auszugeben.
 
 ## Technologie-Stack
 

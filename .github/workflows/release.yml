@@ -48,6 +48,11 @@ jobs:
         if: matrix.platform == 'windows-latest'
         run: node scripts/ensure-windows-ico.mjs
 
+      - name: Debug signing env (no secrets)
+        run: |
+          echo "TAURI_SIGNING_PRIVATE_KEY set? ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' }}"
+          echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD set? ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD != '' }}"
+
       - name: Build and release (Tauri)
         uses: tauri-apps/tauri-action@v0
         env:

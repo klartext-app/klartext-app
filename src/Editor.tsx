@@ -31,6 +31,7 @@ interface EditorProps {
   value: string;
   onChange: (value: string) => void;
   language?: string;
+  fontSize: number;
   autoFormatOnPaste?: boolean;
   onPasteFormatted?: (formatted: string, language: "json" | "xml" | "yaml") => void;
   onCursorChange?: (line: number, column: number) => void;
@@ -44,6 +45,7 @@ export function Editor({
   value,
   onChange,
   language = "plaintext",
+  fontSize,
   autoFormatOnPaste = false,
   onPasteFormatted,
   onCursorChange,
@@ -166,7 +168,7 @@ export function Editor({
             horizontalHasArrows: false,
             arrowSize: 0,
           },
-          fontSize: 14,
+          fontSize,
           fontFamily: "Cascadia Code, Fira Code, Consolas, monospace",
           lineNumbers: "on",
           scrollBeyondLastLine: false,

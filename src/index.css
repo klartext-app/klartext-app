@@ -211,6 +211,17 @@ body {
   color: var(--text);
 }
 
+.toolbar-fontsize {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.toolbar-fontsize-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
 /* Tab bar – Vibrancy */
 .tab-bar {
   display: flex;
@@ -368,6 +379,11 @@ body {
 
 .statusbar-item:first-child {
   padding-left: 0;
+}
+
+.statusbar-version {
+  margin-left: auto;
+  padding-right: 0;
 }
 
 .app-layout {

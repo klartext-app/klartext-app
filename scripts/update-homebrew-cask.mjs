@@ -9,9 +9,21 @@ const files = [
   { arch: "x86_64", name: `Klartext_${VERSION}_x86_64.dmg` },
 ];
 
-function downloadAndHash(url) {
+function downloadAndHash(url, redirectCount = 0) {
   return new Promise((resolve, reject) => {
+    if (redirectCount > 5) {
+      reject(new Error(`Too many redirects: ${url}`));
+      return;
+    }
     https.get(url, (res) => {
+      if (res.statusCode === 301 || res.statusCode === 302 || res.statusCode === 307 || res.statusCode === 308) {
+        const redirectUrl = res.headers.location;
+        if (!redirectUrl) {
+          reject(new Error(`Redirect without location header: ${url}`));
+          return;
+        }
+        return downloadAndHash(redirectUrl, redirectCount + 1).then(resolve).catch(reject);
+      }
       if (res.statusCode !== 200) {
         reject(new Error(`HTTP ${res.statusCode}: ${url}`));
         return;
