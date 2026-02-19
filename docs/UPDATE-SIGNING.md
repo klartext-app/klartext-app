@@ -21,7 +21,7 @@ npm run tauri signer generate -w ~/.tauri/klartext.key
    - Suche nach `"pubkey": "REPLACE_WITH_PUBLIC_KEY"`.
    - Ersetze `REPLACE_WITH_PUBLIC_KEY` durch den **kompletten Inhalt** der `.pub`-Datei (eine Zeile, in Anführungszeichen).
 
-## 3. GitHub-Secret für CI
+## 3. GitHub-Secrets für CI
 
 Damit der Release-Workflow signierte Updater-Artefakte und `latest.json` erzeugen kann:
 
@@ -29,7 +29,12 @@ Damit der Release-Workflow signierte Updater-Artefakte und `latest.json` erzeuge
 2. **New repository secret**:
    - Name: `TAURI_SIGNING_PRIVATE_KEY`
    - Value: **kompletter Inhalt** der Datei `klartext.key` (Private Key, eine Zeile).
-3. Speichern.
+3. **Falls beim Generieren ein Passwort gesetzt wurde**, zusätzlich:
+   - Name: `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
+   - Value: Das Passwort, das beim `tauri signer generate` verwendet wurde.
+4. Speichern.
+
+**Hinweis:** Wenn beim Generieren **kein Passwort** gesetzt wurde, kann `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` leer bleiben oder weggelassen werden.
 
 Ab dem nächsten Release (Tag-Push) baut die Action die Installer mit Signatur und lädt `latest.json` ins Release hoch. Die App prüft dann gegen `releases/latest/download/latest.json` und kann Updates anbieten.
 

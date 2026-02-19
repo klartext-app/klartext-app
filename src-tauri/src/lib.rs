@@ -1,6 +1,5 @@
 use std::fs;
 use std::path::Path;
-use tauri::Manager;
 
 #[tauri::command]
 fn read_dropped_file(path: String) -> Result<String, String> {
@@ -34,8 +33,8 @@ pub fn run() {
         .setup(|app| {
             #[cfg(debug_assertions)]
             {
-                let window = app.get_webview_window("main").unwrap();
-                window.open_devtools();
+                let _window = app.get_webview_window("main").unwrap();
+                _window.open_devtools();
             }
             Ok(())
         })
