@@ -11,6 +11,8 @@ import {
   GitCompare,
   PanelLeft,
   Download,
+  Settings,
+  Search,
 } from "lucide-react";
 import { TitleBar } from "./TitleBar";
 import { Editor, type EditorApi } from "./Editor";
@@ -29,6 +31,10 @@ import {
   minifyJson,
   minifyXml,
   minifyYaml,
+  jsonToYaml,
+  yamlToJson,
+  jsonToXml,
+  xmlToJson,
 } from "./formatters";
 
 export interface Tab {
@@ -37,7 +43,11 @@ export interface Tab {
   content: string;
   filePath: string | null;
   language: "plaintext" | "json" | "xml" | "yaml";
+  dirty: boolean;
 }
+
+type UiLanguage = "de" | "en";
+type FormatId = "json" | "xml" | "yaml";
 
 function newTab(overrides?: Partial<Tab>): Tab {
   return {
@@ -46,6 +56,7 @@ function newTab(overrides?: Partial<Tab>): Tab {
     content: "",
     filePath: null,
     language: "plaintext",
+    dirty: false,
     ...overrides,
   };
 }
@@ -55,10 +66,15 @@ export default function App() {
   const [activeId, setActiveId] = useState<string>(tabs[0].id);
   const [error, setError] = useState<string | null>(null);
   const [autoFormatOnPaste, setAutoFormatOnPaste] = useState(false);
-  const [cursor, setCursor] = useState({ line: 1, column: 1 });
   const [diffMode, setDiffMode] = useState(false);
   const [diffOriginalContent, setDiffOriginalContent] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [replaceQuery, setReplaceQuery] = useState("");
+  const [searchIndex, setSearchIndex] = useState<number | null>(null);
+  const LANGUAGE_KEY = "klartext-language";
   const FONT_SIZE_KEY = "klartext-font-size";
   const MIN_FONT_SIZE = 10;
   const MAX_FONT_SIZE = 28;
@@ -70,6 +86,36 @@ export default function App() {
     return 14;
   })();
   const [fontSize, setFontSize] = useState(defaultFontSize);
+  const defaultLanguage: UiLanguage = (() => {
+    try {
+      const v = localStorage.getItem(LANGUAGE_KEY);
+      if (v === "en" || v === "de") return v;
+    } catch {}
+    return "de";
+  })();
+  const [language, setLanguage] = useState<UiLanguage>(defaultLanguage);
+
+  const DEFAULT_FAVORITES: Record<FormatId, boolean> = {
+    json: true,
+    xml: true,
+    yaml: false,
+  };
+  const FAVORITES_KEY = "klartext-favorites";
+  const defaultFavorites: Record<FormatId, boolean> = (() => {
+    try {
+      const raw = localStorage.getItem(FAVORITES_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<Record<FormatId, boolean>>;
+        return {
+          json: parsed.json ?? true,
+          xml: parsed.xml ?? true,
+          yaml: parsed.yaml ?? true,
+        };
+      }
+    } catch {}
+    return DEFAULT_FAVORITES;
+  })();
+  const [favorites, setFavorites] = useState<Record<FormatId, boolean>>(defaultFavorites);
   const SIDEBAR_WIDTH_KEY = "klartext-sidebar-width";
   const MIN_SIDEBAR = 150;
   const MAX_SIDEBAR = 500;
@@ -85,8 +131,89 @@ export default function App() {
   const mainContentRef = useRef<HTMLDivElement | null>(null);
   const editorApiRef = useRef<EditorApi | null>(null);
   const sidebarWidthDuringDrag = useRef(sidebarWidth);
+  const AUTO_SAVE_KEY = "klartext-auto-save";
+  const defaultAutoSave = (() => {
+    try {
+      const v = localStorage.getItem(AUTO_SAVE_KEY);
+      return v === "true";
+    } catch {}
+    return false;
+  })();
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(defaultAutoSave);
 
   usePersistedTabs(tabs, activeId, setTabs, setActiveId);
+
+  const labels = language === "de"
+    ? {
+        open: "Öffnen",
+        save: "Speichern",
+        newTab: "Neuer Tab",
+        sidebar: "Struktur-Sidebar",
+        formatJson: "JSON formatieren",
+        formatXml: "XML formatieren",
+        formatYaml: "YAML formatieren",
+        minify: "Minify",
+        clear: "Leeren",
+        compare: "Vergleichen",
+        updates: "Nach Updates suchen",
+        autoFormat: "Auto-Format",
+        fontSmaller: "Schriftgröße verkleinern",
+        fontLarger: "Schriftgröße vergrößern",
+        convertJsonToYaml: "JSON → YAML",
+        convertYamlToJson: "YAML → JSON",
+        convertJsonToXml: "JSON → XML",
+        convertXmlToJson: "XML → JSON",
+        search: "Suche",
+        replace: "Ersetzen",
+        undo: "Rückgängig (Strg+Z)",
+        redo: "Wiederholen (Strg+Y)",
+        autoSaveLabel: "Auto-Speichern",
+        settings: "Einstellungen",
+        settingsTitle: "Einstellungen",
+        languageLabel: "Sprache",
+        languageDe: "Deutsch",
+        languageEn: "Englisch",
+        favoritesLabel: "Favorisierte Formate",
+        favoriteJson: "JSON",
+        favoriteXml: "XML",
+        favoriteYaml: "YAML",
+        closeSettings: "Schließen",
+      }
+    : {
+        open: "Open",
+        save: "Save",
+        newTab: "New tab",
+        sidebar: "Structure sidebar",
+        formatJson: "Format JSON",
+        formatXml: "Format XML",
+        formatYaml: "Format YAML",
+        minify: "Minify",
+        clear: "Clear",
+        compare: "Compare",
+        updates: "Check for updates",
+        autoFormat: "Auto-format",
+        fontSmaller: "Decrease font size",
+        fontLarger: "Increase font size",
+        convertJsonToYaml: "JSON → YAML",
+        convertYamlToJson: "YAML → JSON",
+        convertJsonToXml: "JSON → XML",
+        convertXmlToJson: "XML → JSON",
+        search: "Search",
+        replace: "Replace",
+        undo: "Undo (Ctrl+Z)",
+        redo: "Redo (Ctrl+Y)",
+        autoSaveLabel: "Auto-save",
+        settings: "Settings",
+        settingsTitle: "Settings",
+        languageLabel: "Language",
+        languageDe: "German",
+        languageEn: "English",
+        favoritesLabel: "Favorite formats",
+        favoriteJson: "JSON",
+        favoriteXml: "XML",
+        favoriteYaml: "YAML",
+        closeSettings: "Close",
+      };
 
   const updateFontSize = useCallback(
     (updater: (current: number) => number) => {
@@ -109,13 +236,83 @@ export default function App() {
     updateFontSize((current) => Math.max(MIN_FONT_SIZE, current - 1));
   }, [updateFontSize]);
 
+  const handleChangeLanguage = useCallback((lang: UiLanguage) => {
+    setLanguage(lang);
+    try {
+      localStorage.setItem(LANGUAGE_KEY, lang);
+    } catch {}
+  }, []);
+
+  const toggleFavorite = useCallback((id: FormatId) => {
+    setFavorites((current) => {
+      const next = { ...current, [id]: !current[id] };
+      try {
+        localStorage.setItem(FAVORITES_KEY, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  const handleToggleAutoSave = useCallback(() => {
+    setAutoSaveEnabled((current) => {
+      const next = !current;
+      try {
+        localStorage.setItem(AUTO_SAVE_KEY, String(next));
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  const findNextMatch = useCallback(
+    (direction: "next" | "prev") => {
+      const current = tabs.find((t) => t.id === activeId) ?? tabs[0];
+      if (!current) return;
+      const text = current.content;
+      const query = searchQuery;
+      if (!query) return;
+      const from = searchIndex ?? 0;
+      let idx: number;
+      if (direction === "next") {
+        idx = text.indexOf(query, from + (searchIndex != null ? 1 : 0));
+        if (idx === -1) idx = text.indexOf(query);
+      } else {
+        idx = text.lastIndexOf(query, from - 1);
+        if (idx === -1) idx = text.lastIndexOf(query);
+      }
+      if (idx === -1) return;
+      setSearchIndex(idx);
+      const before = text.slice(0, idx);
+      const line = before.split(/\r?\n/).length;
+      editorApiRef.current?.revealLine(line);
+    },
+    [tabs, activeId, searchIndex, searchQuery]
+  );
+
+  const handleSearchSubmit = useCallback(() => {
+    setSearchIndex(null);
+    findNextMatch("next");
+  }, [findNextMatch]);
+
+  const handleReplaceAll = useCallback(() => {
+    if (!searchQuery) return;
+    const current = tabs.find((t) => t.id === activeId) ?? tabs[0];
+    if (!current) return;
+    const text = current.content;
+    if (!text.includes(searchQuery)) return;
+    const updated = text.split(searchQuery).join(replaceQuery);
+    editorApiRef.current?.setValue(updated);
+    setTabs((prev) =>
+      prev.map((t) => (t.id === activeId ? { ...t, content: updated } : t))
+    );
+  }, [tabs, activeId, searchQuery, replaceQuery]);
+
   useEffect(() => {
     if (tabs.length === 0) {
       const tab = newTab();
       setTabs([tab]);
       setActiveId(tab.id);
     }
-  }, [tabs.length, setTabs, setActiveId]);
+  }, [tabs.length]);
 
   const handleFilesDropped = useCallback(
     (tabs: { title: string; content: string; filePath: string | null; language: Tab["language"] }[]) => {
@@ -130,10 +327,13 @@ export default function App() {
 
   const safeTabs = tabs.length > 0 ? tabs : [newTab()];
   const activeTab = safeTabs.find((t) => t.id === activeId) ?? safeTabs[0];
+
   const setActiveContent = useCallback(
     (content: string) => {
       setTabs((prev) =>
-        prev.map((t) => (t.id === activeId ? { ...t, content } : t))
+        prev.map((t) =>
+          t.id === activeId ? { ...t, content, dirty: true } : t
+        )
       );
     },
     [activeId]
@@ -187,6 +387,7 @@ export default function App() {
       content: result.content,
       filePath: result.path,
       language,
+      dirty: false,
     };
     setTabs((prev) => [...prev, tab]);
     setActiveId(tab.id);
@@ -200,7 +401,7 @@ export default function App() {
     setTabs((prev) =>
       prev.map((t) =>
         t.id === activeId
-          ? { ...t, filePath: path, title: getFileName(path), content }
+          ? { ...t, filePath: path, title: getFileName(path), content, dirty: false }
           : t
       )
     );
@@ -213,61 +414,152 @@ export default function App() {
       try {
         const formatted = fn(content);
         editorApiRef.current?.setValue(formatted);
-        setActiveContent(formatted);
+        setTabs((prev) =>
+          prev.map((t) => (t.id === activeId ? { ...t, content: formatted } : t))
+        );
       } catch {
-        setError("Das Zielformat wurde nicht erkannt.");
+        setError(language === "de" ? "Das Zielformat wurde nicht erkannt." : "Target format not recognized.");
       }
     },
-    [activeTab.content, setActiveContent]
+    [activeId, activeTab.content, language]
   );
 
   const handleFormatJson = useCallback(() => {
-    runFormat((c) => formatJson(c));
-    setActiveLanguage("json");
-  }, [runFormat, setActiveLanguage]);
+    const current = tabs.find((t) => t.id === activeId) ?? tabs[0];
+    if (!current) return;
+    const content = editorApiRef.current?.getValue() ?? current.content;
+    try {
+      let next = content;
+      if (current.language === "yaml") {
+        next = yamlToJson(content);
+      } else if (current.language === "xml") {
+        next = xmlToJson(content);
+      } else {
+        next = formatJson(content);
+      }
+      editorApiRef.current?.setValue(next);
+      setTabs((prev) =>
+        prev.map((t) =>
+          t.id === activeId ? { ...t, content: next, language: "json", dirty: true } : t
+        )
+      );
+    } catch {
+      setError(language === "de" ? "Das Zielformat wurde nicht erkannt." : "Target format not recognized.");
+    }
+  }, [tabs, activeId, language]);
+
   const handleFormatXml = useCallback(() => {
-    runFormat((c) => formatXml(c));
-    setActiveLanguage("xml");
-  }, [runFormat, setActiveLanguage]);
+    const current = tabs.find((t) => t.id === activeId) ?? tabs[0];
+    if (!current) return;
+    const content = editorApiRef.current?.getValue() ?? current.content;
+    try {
+      let next = content;
+      if (current.language === "json") {
+        next = jsonToXml(content);
+      } else {
+        next = formatXml(content);
+      }
+      editorApiRef.current?.setValue(next);
+      setTabs((prev) =>
+        prev.map((t) =>
+          t.id === activeId ? { ...t, content: next, language: "xml", dirty: true } : t
+        )
+      );
+    } catch {
+      setError(language === "de" ? "Das Zielformat wurde nicht erkannt." : "Target format not recognized.");
+    }
+  }, [tabs, activeId, language]);
+
   const handleFormatYaml = useCallback(() => {
-    runFormat((c) => formatYaml(c));
-    setActiveLanguage("yaml");
-  }, [runFormat, setActiveLanguage]);
+    const current = tabs.find((t) => t.id === activeId) ?? tabs[0];
+    if (!current) return;
+    const content = editorApiRef.current?.getValue() ?? current.content;
+    try {
+      let next = content;
+      if (current.language === "json") {
+        next = jsonToYaml(content);
+      } else {
+        next = formatYaml(content);
+      }
+      editorApiRef.current?.setValue(next);
+      setTabs((prev) =>
+        prev.map((t) =>
+          t.id === activeId ? { ...t, content: next, language: "yaml", dirty: true } : t
+        )
+      );
+    } catch {
+      setError(language === "de" ? "Das Zielformat wurde nicht erkannt." : "Target format not recognized.");
+    }
+  }, [tabs, activeId, language]);
+
   const handleMinify = useCallback(() => {
     setError(null);
     const content = editorApiRef.current?.getValue() ?? activeTab.content;
     const trimmed = content.trim();
     if (!trimmed) return;
+    const errorMsg = language === "de" ? "Das Zielformat wurde nicht erkannt." : "Target format not recognized.";
     try {
       if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
         const minified = minifyJson(content);
         editorApiRef.current?.setValue(minified);
-        setActiveContent(minified);
+        setTabs((prev) =>
+          prev.map((t) => (t.id === activeId ? { ...t, content: minified } : t))
+        );
         setActiveLanguage("json");
       } else if (trimmed.startsWith("<")) {
         const minified = minifyXml(content);
         editorApiRef.current?.setValue(minified);
-        setActiveContent(minified);
+        setTabs((prev) =>
+          prev.map((t) => (t.id === activeId ? { ...t, content: minified } : t))
+        );
         setActiveLanguage("xml");
       } else {
         try {
           const minified = minifyYaml(content);
           editorApiRef.current?.setValue(minified);
-          setActiveContent(minified);
+          setTabs((prev) =>
+            prev.map((t) => (t.id === activeId ? { ...t, content: minified } : t))
+          );
           setActiveLanguage("yaml");
         } catch {
-          setError("Das Zielformat wurde nicht erkannt.");
+          setError(errorMsg);
         }
       }
     } catch {
-      setError("Das Zielformat wurde nicht erkannt.");
+      setError(errorMsg);
     }
-  }, [activeTab.content, setActiveContent, setActiveLanguage]);
+  }, [activeTab.content, activeId, language]);
   const handleClear = useCallback(() => {
     setActiveContent("");
     setError(null);
     setActiveLanguage("plaintext");
   }, [setActiveContent, setActiveLanguage]);
+
+  useEffect(() => {
+    if (!autoSaveEnabled) return;
+    if (!activeTab.filePath || !activeTab.dirty) return;
+    const timer = setTimeout(async () => {
+      const content = editorApiRef.current?.getValue() ?? activeTab.content;
+      const path = await saveFile(activeTab.filePath, content);
+      if (path == null) return;
+      setTabs((prev) =>
+        prev.map((t) =>
+          t.id === activeId
+            ? { ...t, filePath: path, title: getFileName(path), content, dirty: false }
+            : t
+        )
+      );
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [autoSaveEnabled, activeId, activeTab.filePath, activeTab.content, activeTab.dirty]);
+
+  useEffect(() => {
+    if (!error) return;
+    const timer = setTimeout(() => {
+      setError(null);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, [error]);
 
   const handlePasteFormatted = useCallback(
     (formatted: string, language: "json" | "xml" | "yaml") => {
@@ -331,6 +623,31 @@ export default function App() {
           ? "YAML"
           : "Plain Text";
 
+  const formatButtons: { id: FormatId; onClick: () => void; icon: JSX.Element; title: string }[] = [
+    {
+      id: "json",
+      onClick: handleFormatJson,
+      icon: <Braces size={18} />,
+      title: labels.formatJson,
+    },
+    {
+      id: "xml",
+      onClick: handleFormatXml,
+      icon: <CodeXml size={18} />,
+      title: labels.formatXml,
+    },
+    {
+      id: "yaml",
+      onClick: handleFormatYaml,
+      icon: <FileCode size={18} />,
+      title: labels.formatYaml,
+    },
+  ];
+  const activeFormatButtons =
+    Object.values(favorites).some(Boolean)
+      ? formatButtons.filter((b) => favorites[b.id])
+      : formatButtons;
+
   let outline: ReturnType<typeof getDocumentOutline> = null;
   let breadcrumbPath: ReturnType<typeof getPathAtLine> = null;
   try {
@@ -338,7 +655,7 @@ export default function App() {
       editorApiRef.current?.getValue() ?? activeTab.content,
       activeTab.language
     );
-    breadcrumbPath = outline?.root ? getPathAtLine(outline.root, cursor.line) : null;
+    breadcrumbPath = outline?.root ? getPathAtLine(outline.root, 1) : null;
   } catch {
     outline = null;
     breadcrumbPath = null;
@@ -388,45 +705,52 @@ export default function App() {
     <div className="app-layout">
       <TitleBar />
       <div className="toolbar">
-        <button type="button" className="toolbar-btn ghost" onClick={handleOpen} title="Öffnen">
+        <button type="button" className="toolbar-btn ghost" onClick={handleOpen} title={labels.open}>
           <FolderOpen size={18} />
         </button>
-        <button type="button" className="toolbar-btn ghost" onClick={handleSave} title="Speichern">
+        <button type="button" className="toolbar-btn ghost" onClick={handleSave} title={labels.save}>
           <Save size={18} />
         </button>
-        <button type="button" className="toolbar-btn ghost" onClick={addTab} title="Neuer Tab">
+        <button type="button" className="toolbar-btn ghost" onClick={addTab} title={labels.newTab}>
           <FilePlus size={18} />
         </button>
         <button
           type="button"
           className={`toolbar-btn ghost ${sidebarOpen ? "active" : ""}`}
           onClick={() => setSidebarOpen((v) => !v)}
-          title="Struktur-Sidebar"
+          title={labels.sidebar}
         >
           <PanelLeft size={18} />
         </button>
         <div className="toolbar-sep" />
-        <button type="button" className="toolbar-btn ghost" onClick={handleFormatJson} title="JSON formatieren">
-          <Braces size={18} />
-        </button>
-        <button type="button" className="toolbar-btn ghost" onClick={handleFormatXml} title="XML formatieren">
-          <CodeXml size={18} />
-        </button>
-        <button type="button" className="toolbar-btn ghost" onClick={handleFormatYaml} title="YAML formatieren">
-          <FileCode size={18} />
-        </button>
+        {activeFormatButtons.map((btn) => (
+          <button
+            key={btn.id}
+            type="button"
+            className="toolbar-btn ghost"
+            onClick={btn.onClick}
+            title={btn.title}
+          >
+            {btn.icon}
+          </button>
+        ))}
         <div className="toolbar-sep" />
-        <button type="button" className="toolbar-btn ghost" onClick={handleMinify} title="Minify">
+        <button type="button" className="toolbar-btn ghost" onClick={handleMinify} title={labels.minify}>
           <Minus size={18} />
         </button>
-        <button type="button" className="toolbar-btn ghost" onClick={handleClear} title="Clear">
+        <button type="button" className="toolbar-btn ghost" onClick={handleClear} title={labels.clear}>
           <Trash2 size={18} />
         </button>
-        <button type="button" className="toolbar-btn ghost" onClick={handleCompare} title="Vergleichen">
+        <button type="button" className="toolbar-btn ghost" onClick={handleCompare} title={labels.compare}>
           <GitCompare size={18} />
         </button>
         {isTauriEnv() && (
-          <button type="button" className="toolbar-btn ghost" onClick={handleCheckForUpdates} title="Nach Updates suchen">
+          <button
+            type="button"
+            className="toolbar-btn ghost"
+            onClick={handleCheckForUpdates}
+            title={labels.updates}
+          >
             <Download size={18} />
           </button>
         )}
@@ -437,7 +761,7 @@ export default function App() {
             checked={autoFormatOnPaste}
             onChange={(e) => setAutoFormatOnPaste(e.target.checked)}
           />
-          <span>Auto-Format</span>
+          <span>{labels.autoFormat}</span>
         </label>
         <div className="toolbar-sep" />
         <div className="toolbar-fontsize">
@@ -445,7 +769,7 @@ export default function App() {
             type="button"
             className="toolbar-btn ghost"
             onClick={decreaseFontSize}
-            title="Schriftgröße verkleinern"
+            title={labels.fontSmaller}
           >
             A-
           </button>
@@ -454,17 +778,28 @@ export default function App() {
             type="button"
             className="toolbar-btn ghost"
             onClick={increaseFontSize}
-            title="Schriftgröße vergrößern"
+            title={labels.fontLarger}
           >
             A+
           </button>
         </div>
-        {error && (
-          <>
-            <div className="toolbar-sep" />
-            <span className="toolbar-error">{error}</span>
-          </>
-        )}
+        <div className="toolbar-sep" />
+        <button
+          type="button"
+          className="toolbar-btn ghost"
+          onClick={() => setSettingsOpen(true)}
+          title={labels.settings}
+        >
+          <Settings size={18} />
+        </button>
+        <button
+          type="button"
+          className={`toolbar-btn ghost ${searchOpen ? "active" : ""}`}
+          onClick={() => setSearchOpen((v) => !v)}
+          title={labels.search}
+        >
+          <Search size={18} />
+        </button>
       </div>
       <div className="tab-bar">
         {safeTabs.map((tab) => (
@@ -473,7 +808,10 @@ export default function App() {
             className={`tab ${tab.id === activeId ? "tab-active" : ""}`}
             onClick={() => setActiveId(tab.id)}
           >
-            <span className="tab-title">{tab.title}</span>
+            <span className="tab-title">
+              {tab.dirty ? "• " : ""}
+              {tab.title}
+            </span>
             <button
               type="button"
               className="tab-close"
@@ -489,9 +827,62 @@ export default function App() {
         ))}
       </div>
       {!diffMode && (
-        <div className="breadcrumbs-bar">
-          <Breadcrumbs path={breadcrumbPath} />
-        </div>
+        <>
+          <div className="breadcrumbs-bar">
+            <Breadcrumbs path={breadcrumbPath} />
+          </div>
+          {searchOpen && (
+            <div className="search-bar">
+              <input
+                className="search-input"
+                placeholder={labels.search}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSearchSubmit();
+                }}
+              />
+              <input
+                className="search-input"
+                placeholder={labels.replace}
+                value={replaceQuery}
+                onChange={(e) => setReplaceQuery(e.target.value)}
+              />
+              <button
+                type="button"
+                className="toolbar-btn ghost"
+                onClick={handleSearchSubmit}
+                title={labels.search}
+              >
+                {labels.search}
+              </button>
+              <button
+                type="button"
+                className="toolbar-btn ghost"
+                onClick={() => findNextMatch("next")}
+                title={labels.search}
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                className="toolbar-btn ghost"
+                onClick={() => findNextMatch("prev")}
+                title={labels.search}
+              >
+                ↓
+              </button>
+              <button
+                type="button"
+                className="toolbar-btn ghost"
+                onClick={handleReplaceAll}
+                title={labels.replace}
+              >
+                {labels.replace}
+              </button>
+            </div>
+          )}
+        </>
       )}
       {diffMode ? (
         <DiffEditorView
@@ -528,7 +919,6 @@ export default function App() {
             fontSize={fontSize}
             autoFormatOnPaste={autoFormatOnPaste}
             onPasteFormatted={handlePasteFormatted}
-            onCursorChange={(line, column) => setCursor({ line, column })}
             onEditorReady={(api) => { editorApiRef.current = api; }}
             onEditorUnmount={() => { editorApiRef.current = null; }}
           />
@@ -537,9 +927,99 @@ export default function App() {
       <StatusBar
         lineCount={lineCount}
         format={formatLabel}
-        cursorLine={cursor.line}
-        cursorColumn={cursor.column}
+        language={language}
+        error={error}
       />
+      {settingsOpen && (
+        <div className="settings-backdrop" onClick={() => setSettingsOpen(false)}>
+          <div
+            className="settings-panel"
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            <div className="settings-header">
+              <span className="settings-title">{labels.settingsTitle}</span>
+            </div>
+            <div className="settings-section">
+              <div className="settings-section-title">{labels.languageLabel}</div>
+              <div className="settings-row">
+                <label className="settings-radio">
+                  <input
+                    type="radio"
+                    name="language"
+                    value="de"
+                    checked={language === "de"}
+                    onChange={() => handleChangeLanguage("de")}
+                  />
+                  <span>{labels.languageDe}</span>
+                </label>
+                <label className="settings-radio">
+                  <input
+                    type="radio"
+                    name="language"
+                    value="en"
+                    checked={language === "en"}
+                    onChange={() => handleChangeLanguage("en")}
+                  />
+                  <span>{labels.languageEn}</span>
+                </label>
+              </div>
+            </div>
+            <div className="settings-section">
+              <div className="settings-section-title">{labels.favoritesLabel}</div>
+              <div className="settings-row">
+                <label className="settings-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={favorites.json}
+                    onChange={() => toggleFavorite("json")}
+                  />
+                  <span>{labels.favoriteJson}</span>
+                </label>
+                <label className="settings-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={favorites.xml}
+                    onChange={() => toggleFavorite("xml")}
+                  />
+                  <span>{labels.favoriteXml}</span>
+                </label>
+                <label className="settings-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={favorites.yaml}
+                    onChange={() => toggleFavorite("yaml")}
+                  />
+                  <span>{labels.favoriteYaml}</span>
+                </label>
+              </div>
+            </div>
+            <div className="settings-section">
+              <div className="settings-section-title">{language === "de" ? "Speichern" : "Save"}</div>
+              <div className="settings-row">
+                <label className="settings-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={autoSaveEnabled}
+                    onChange={handleToggleAutoSave}
+                  />
+                  <span>{labels.autoSaveLabel}</span>
+                </label>
+              </div>
+            </div>
+            <div className="settings-actions">
+              <button
+                type="button"
+                className="toolbar-btn"
+                onClick={() => setSettingsOpen(false)}
+              >
+                {labels.closeSettings}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

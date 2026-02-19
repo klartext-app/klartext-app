@@ -162,3 +162,78 @@ export function minifyXml(text: string): string {
     throw new Error(FORMAT_ERROR);
   }
 }
+
+/**
+ * Konvertiert JSON-Text nach YAML.
+ */
+export function jsonToYaml(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return text;
+  try {
+    const parsed = JSON.parse(trimmed);
+    return stringifyYaml(parsed, { indent: 2 });
+  } catch {
+    throw new Error(FORMAT_ERROR);
+  }
+}
+
+/**
+ * Konvertiert YAML-Text nach JSON (formatiert).
+ */
+export function yamlToJson(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return text;
+  try {
+    const parsed = parseYaml(trimmed);
+    if (parsed === undefined) throw new Error(FORMAT_ERROR);
+    return JSON.stringify(parsed, null, 2);
+  } catch {
+    throw new Error(FORMAT_ERROR);
+  }
+}
+
+/**
+ * Konvertiert JSON-Text nach XML.
+ */
+export function jsonToXml(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return text;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(trimmed);
+  } catch {
+    throw new Error(FORMAT_ERROR);
+  }
+  const builder = new XMLBuilder({
+    format: true,
+    indentBy: "  ",
+    ignoreAttributes: false,
+    attributeNamePrefix: "@_",
+  });
+  try {
+    const result = builder.build(parsed as any);
+    if (result == null || String(result).trim() === "") throw new Error(FORMAT_ERROR);
+    return result;
+  } catch {
+    throw new Error(FORMAT_ERROR);
+  }
+}
+
+/**
+ * Konvertiert XML-Text nach JSON (formatiert).
+ */
+export function xmlToJson(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return text;
+  if (!trimmed.startsWith("<")) throw new Error(FORMAT_ERROR);
+  const parser = new XMLParser({
+    ignoreAttributes: false,
+    attributeNamePrefix: "@_",
+  });
+  try {
+    const parsed = parser.parse(trimmed);
+    return JSON.stringify(parsed, null, 2);
+  } catch {
+    throw new Error(FORMAT_ERROR);
+  }
+}

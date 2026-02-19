@@ -1,5 +1,6 @@
 use std::fs;
 use std::path::Path;
+use tauri::Manager;
 
 #[tauri::command]
 fn read_dropped_file(path: String) -> Result<String, String> {

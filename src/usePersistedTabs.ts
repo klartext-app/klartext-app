@@ -73,6 +73,7 @@ export function usePersistedTabs(
       }
     });
     return () => cancelAnimationFrame(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

@@ -105,11 +105,6 @@ export function Editor({
       document.head.appendChild(style);
       scrollbarStyleRef.current = style;
     }
-    
-    cleanupRef.current = () => {
-      disposableCursor.dispose();
-      if (domNode) domNode.removeEventListener("paste", pasteHandler);
-    };
 
     // Midnight Theme
     monaco.editor.defineTheme("midnight", MIDNIGHT_THEME);
