@@ -13,6 +13,9 @@ src-tauri/target
 dist-ssr
 *.local
 
+# Tauri Signing (Private Key nie committen)
+*.key
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

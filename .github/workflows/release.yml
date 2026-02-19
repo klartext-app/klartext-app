@@ -41,6 +41,11 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      - name: Extract and update version from tag
+        run: |
+          VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
+          node scripts/update-version.mjs $VERSION
+
       - name: Ensure Windows .ico icon (Windows only)
         if: matrix.platform == 'windows-latest'
         run: node scripts/ensure-windows-ico.mjs
@@ -49,7 +54,9 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
         with:
+          includeUpdaterJson: true
           tagName: ${{ github.ref_name }}
           releaseName: 'Klartext ${{ github.ref_name }}'
           releaseBody: 'Siehe Assets für die Installer (macOS .dmg, Windows .msi).'

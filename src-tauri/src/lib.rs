@@ -1,6 +1,6 @@
-use tauri::Manager;
 use std::fs;
 use std::path::Path;
+use tauri::Manager;
 
 #[tauri::command]
 fn read_dropped_file(path: String) -> Result<String, String> {
@@ -8,8 +8,14 @@ fn read_dropped_file(path: String) -> Result<String, String> {
     if !p.is_file() {
         return Err("Keine Datei".into());
     }
-    let ext = p.extension().and_then(|e| e.to_str()).map(|s| s.to_lowercase());
-    let allowed = matches!(ext.as_deref(), Some("json") | Some("xml") | Some("xsl") | Some("yaml") | Some("yml") | Some("txt"));
+    let ext = p
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(|s| s.to_lowercase());
+    let allowed = matches!(
+        ext.as_deref(),
+        Some("json") | Some("xml") | Some("xsl") | Some("yaml") | Some("yml") | Some("txt")
+    );
     if !allowed {
         return Err("Nur .json, .xml, .xsl, .yaml, .yml oder .txt erlaubt".into());
     }
@@ -19,6 +25,8 @@ fn read_dropped_file(path: String) -> Result<String, String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())

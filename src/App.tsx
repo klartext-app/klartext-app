@@ -10,6 +10,7 @@ import {
   Trash2,
   GitCompare,
   PanelLeft,
+  Download,
 } from "lucide-react";
 import { TitleBar } from "./TitleBar";
 import { Editor, type EditorApi } from "./Editor";
@@ -244,6 +245,43 @@ export default function App() {
     [setActiveContent, setActiveLanguage]
   );
 
+  const handleCheckForUpdates = useCallback(async () => {
+    if (!isTauriEnv()) return;
+    try {
+      const { check } = await import("@tauri-apps/plugin-updater");
+      const { ask, message } = await import("@tauri-apps/plugin-dialog");
+      const update = await check();
+      if (!update) {
+        await ask("Keine Updates verfügbar. Du hast bereits die neueste Version.", {
+          title: "Update",
+          okLabel: "OK",
+        });
+        return;
+      }
+      const install = await ask(
+        `Version ${update.version} ist verfügbar.${update.body ? `\n\n${update.body}` : ""}\n\nJetzt herunterladen und installieren?`,
+        { title: "Update verfügbar", okLabel: "Jetzt installieren", cancelLabel: "Später" }
+      );
+      if (!install) return;
+      const { relaunch } = await import("@tauri-apps/plugin-process");
+      await update.downloadAndInstall();
+      await relaunch();
+    } catch (e) {
+      const { message: showMessage } = await import("@tauri-apps/plugin-dialog");
+      const errorMsg = e instanceof Error ? e.message : String(e);
+      console.error("Update check failed:", e);
+      const is404 = errorMsg.includes("404") || errorMsg.includes("not found");
+      const hint = is404
+        ? "Die Update-Datei (latest.json) existiert noch nicht.\n\nDas ist normal, wenn noch kein Release mit Signing gebaut wurde.\n\nBitte:\n1. GitHub Secret TAURI_SIGNING_PRIVATE_KEY setzen\n2. Neues Release bauen (Tag-Push)"
+        : "Für Updates muss ein Release mit Signing gebaut worden sein.";
+      await showMessage(`Update-Prüfung fehlgeschlagen:\n\n${errorMsg}\n\n${hint}`, {
+        title: "Update-Fehler",
+        kind: "error",
+      });
+      setError(errorMsg);
+    }
+  }, []);
+
   const handleCompare = useCallback(() => {
     setDiffOriginalContent(activeTab.content);
     setDiffMode(true);
@@ -355,6 +393,11 @@ export default function App() {
         <button type="button" className="toolbar-btn ghost" onClick={handleCompare} title="Vergleichen">
           <GitCompare size={18} />
         </button>
+        {isTauriEnv() && (
+          <button type="button" className="toolbar-btn ghost" onClick={handleCheckForUpdates} title="Nach Updates suchen">
+            <Download size={18} />
+          </button>
+        )}
         <div className="toolbar-sep" />
         <label className="toolbar-checkbox">
           <input
