@@ -249,7 +249,7 @@ export default function App() {
     if (!isTauriEnv()) return;
     try {
       const { check } = await import("@tauri-apps/plugin-updater");
-      const { ask, message } = await import("@tauri-apps/plugin-dialog");
+      const { ask } = await import("@tauri-apps/plugin-dialog");
       const update = await check();
       if (!update) {
         await ask("Keine Updates verfügbar. Du hast bereits die neueste Version.", {

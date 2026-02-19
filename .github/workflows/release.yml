@@ -42,9 +42,7 @@ jobs:
         run: npm ci
 
       - name: Extract and update version from tag
-        run: |
-          VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
-          node scripts/update-version.mjs $VERSION
+        run: node scripts/update-version.mjs ${{ github.ref_name }}
 
       - name: Ensure Windows .ico icon (Windows only)
         if: matrix.platform == 'windows-latest'

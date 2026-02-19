@@ -4,10 +4,17 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.join(__dirname, "..");
-const version = process.env.VERSION || process.argv[2];
+// Version aus Argument oder Environment Variable, oder Tag-Name ohne 'v' Prefix
+let version = process.env.VERSION || process.argv[2];
+
+// Falls Tag-Format (z.B. "v0.1.5"), entferne das 'v'
+if (version && version.startsWith("v")) {
+  version = version.slice(1);
+}
 
 if (!version) {
   console.error("Usage: node scripts/update-version.mjs <version>");
+  console.error("Or set VERSION environment variable");
   process.exit(1);
 }
 
