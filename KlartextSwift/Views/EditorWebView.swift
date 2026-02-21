@@ -18,18 +18,19 @@ struct EditorWebView: NSViewRepresentable {
         webView.setValue(false, forKey: "drawsBackground")
         context.coordinator.webView = webView
 
-        // Callbacks für AppState
-        appState.getEditorContent = { [weak context] in
-            context?.coordinator.cachedContent ?? ""
+        // Callbacks für AppState – coordinator ist eine Klasse, daher [weak coordinator] möglich
+        let coordinator = context.coordinator
+        appState.getEditorContent = { [weak coordinator] in
+            coordinator?.cachedContent ?? ""
         }
-        appState.setEditorContent = { [weak context] content in
-            context?.coordinator.setContent(content)
+        appState.setEditorContent = { [weak coordinator] content in
+            coordinator?.setContent(content)
         }
-        appState.onRequestJsOperation = { [weak context] operation, content in
-            context?.coordinator.runJsOperation(operation, content: content)
+        appState.onRequestJsOperation = { [weak coordinator] operation, content in
+            coordinator?.runJsOperation(operation, content: content)
         }
 
-        loadEditor(webView: webView, coordinator: context.coordinator)
+        loadEditor(webView: webView, coordinator: coordinator)
         return webView
     }
 
@@ -173,9 +174,9 @@ struct EditorWebView: NSViewRepresentable {
                     cachedContent = content
                     DispatchQueue.main.async { [weak self] in
                         guard let self else { return }
-                        if let idx = appState.tabs.firstIndex(where: { $0.id == appState.activeId }) {
-                            appState.tabs[idx].content = content
-                            appState.tabs[idx].dirty = true
+                        if let idx = self.appState.tabs.firstIndex(where: { $0.id == self.appState.activeId }) {
+                            self.appState.tabs[idx].content = content
+                            self.appState.tabs[idx].dirty = true
                         }
                     }
                 }

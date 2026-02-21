@@ -54,7 +54,7 @@ struct DiffWebView: NSViewRepresentable {
     private func loadDiff(in webView: WKWebView) {
         let escaped_orig = jsEscape(original)
         let escaped_mod = jsEscape(modified)
-        let lang = language.rawValue
+        _ = language.rawValue
 
         let html = """
         <!DOCTYPE html>
