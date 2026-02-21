@@ -92,13 +92,26 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Download Sparkle tools
+        run: |
+          curl -sL "https://github.com/sparkle-project/Sparkle/releases/download/2.8.1/Sparkle-2.8.1.tar.xz" \
+            -o /tmp/Sparkle.tar.xz
+          cd /tmp && tar -xf Sparkle.tar.xz ./bin/sign_update
+          chmod +x /tmp/bin/sign_update
+
       - name: Generate appcast.xml for Sparkle
+        env:
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: |
           VERSION="${{ steps.version.outputs.VERSION }}"
           DMG="build/Klartext_${VERSION}_aarch64.dmg"
-          SHA256=$(shasum -a 256 "$DMG" | awk '{print $1}')
           LENGTH=$(wc -c < "$DMG" | tr -d ' ')
           PUBDATE=$(date -u +"%a, %d %b %Y %H:%M:%S +0000")
+
+          # DMG mit EdDSA signieren
+          echo "$SPARKLE_PRIVATE_KEY" > /tmp/sparkle_key.txt
+          SIGNATURE=$(/tmp/bin/sign_update "$DMG" /tmp/sparkle_key.txt)
+          rm /tmp/sparkle_key.txt
 
           mkdir -p build/gh-pages
           cat > build/gh-pages/appcast.xml <<EOF
@@ -121,7 +134,7 @@ jobs:
                   sparkle:shortVersionString="$VERSION"
                   length="$LENGTH"
                   type="application/octet-stream"
-                  sparkle:edSignature="not-signed"
+                  sparkle:edSignature="$SIGNATURE"
                 />
               </item>
             </channel>
