@@ -57,6 +57,11 @@ struct SettingsView: View {
                             isOn: $settings.autoSave
                         )
                     }
+
+                    // Updates
+                    SettingsSection(title: settings.label("Updates", "Updates")) {
+                        UpdateCheckButton()
+                    }
                 }
                 .padding(16)
             }
@@ -137,6 +142,38 @@ struct RadioButton: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+}
+
+struct UpdateCheckButton: View {
+    @ObservedObject var settings = AppSettings.shared
+    @State private var isChecking = false
+
+    var body: some View {
+        Button {
+            isChecking = true
+            Task {
+                await UpdateChecker.checkAndNotify()
+                isChecking = false
+            }
+        } label: {
+            HStack(spacing: 6) {
+                if isChecking {
+                    ProgressView()
+                        .scaleEffect(0.7)
+                        .frame(width: 14, height: 14)
+                } else {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 12))
+                }
+                Text(isChecking
+                     ? settings.label("Wird geprüft…", "Checking…")
+                     : settings.label("Nach Updates suchen", "Check for updates"))
+                    .font(.system(size: 13))
+            }
+        }
+        .buttonStyle(PrimaryButtonStyle())
+        .disabled(isChecking)
     }
 }
 
