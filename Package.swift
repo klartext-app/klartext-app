@@ -6,15 +6,10 @@ let package = Package(
     platforms: [
         .macOS(.v13)
     ],
-    dependencies: [
-        .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.0.0")
-    ],
     targets: [
         .executableTarget(
             name: "KlartextSwift",
-            dependencies: [
-                .product(name: "Sparkle", package: "Sparkle")
-            ],
+            dependencies: [],
             path: "KlartextSwift",
             exclude: ["Info.plist"],
             resources: [

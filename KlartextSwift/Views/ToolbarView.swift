@@ -14,9 +14,6 @@ struct ToolbarView: View {
             ToolbarButton(icon: "square.and.arrow.down", title: settings.label("Speichern", "Save")) {
                 Task { await appState.saveActiveTab() }
             }
-            ToolbarButton(icon: "plus.square", title: settings.label("Neuer Tab", "New tab")) {
-                appState.addTab()
-            }
             ToolbarButton(
                 icon: "sidebar.left",
                 title: settings.label("Struktur", "Structure"),

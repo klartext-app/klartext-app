@@ -1,16 +1,10 @@
 import SwiftUI
 import AppKit
-import Sparkle
 
 @main
 struct KlartextApp: App {
     @StateObject private var appState = AppState()
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    private let updaterController = SPUStandardUpdaterController(
-        startingUpdater: true,
-        updaterDelegate: nil,
-        userDriverDelegate: nil
-    )
 
     var body: some Scene {
         WindowGroup {
@@ -19,6 +13,9 @@ struct KlartextApp: App {
                 .frame(minWidth: 700, minHeight: 450)
                 .onAppear {
                     NSApp.windows.forEach { configureWindow($0) }
+                }
+                .task {
+                    await UpdateChecker.checkSilently()
                 }
         }
         .windowStyle(.hiddenTitleBar)
@@ -42,9 +39,8 @@ struct KlartextApp: App {
             }
             CommandGroup(after: .appInfo) {
                 Button("Nach Updates suchen…") {
-                    updaterController.updater.checkForUpdates()
+                    Task { await UpdateChecker.checkAndNotify() }
                 }
-                .disabled(!updaterController.updater.canCheckForUpdates)
             }
         }
     }

@@ -22,12 +22,6 @@
     <string>13.0</string>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
-    <key>SUFeedURL</key>
-    <string>https://klartext-app.github.io/klartext-app/appcast.xml</string>
-    <key>SUEnableAutomaticChecks</key>
-    <true/>
-    <key>SUPublicEDKey</key>
-    <string>4uITLnvinqQRH/U7oUcQ98i/s9P5zzvkhs95c+CWjk0=</string>
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSSupportsAutomaticGraphicsSwitching</key>

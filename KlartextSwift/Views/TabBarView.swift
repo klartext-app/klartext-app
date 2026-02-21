@@ -4,12 +4,27 @@ struct TabBarView: View {
     @EnvironmentObject var appState: AppState
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 0) {
-                ForEach(appState.tabs) { tab in
-                    TabItemView(tab: tab)
+        HStack(spacing: 0) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 0) {
+                    ForEach(appState.tabs) { tab in
+                        TabItemView(tab: tab)
+                    }
                 }
             }
+
+            // Neuer Tab Button
+            Button {
+                appState.addTab()
+            } label: {
+                Image(systemName: "plus")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(Color(white: 0.55))
+                    .frame(width: 32, height: 36)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help("Neuer Tab")
         }
         .frame(height: 36)
         .background(Color(red: 0.08, green: 0.09, blue: 0.12))

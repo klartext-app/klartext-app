@@ -134,6 +134,7 @@ struct RadioButton: View {
                     .font(.system(size: 13))
                     .foregroundColor(Color(white: 0.8))
             }
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
