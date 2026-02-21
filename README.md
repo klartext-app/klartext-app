@@ -82,7 +82,9 @@ brew install --cask klartext
 2. App in den Programme-Ordner ziehen
 3. Beim ersten Start: Rechtsklick → Öffnen (Gatekeeper-Warnung umgehen)
 
-Falls "App ist beschädigt": 
+Falls macOS meldet „App ist beschädigt" oder sie sich nicht öffnen lässt:
 ```bash
 sudo xattr -r -d com.apple.quarantine /Applications/Klartext.app
 ```
+
+> **Hinweis:** Bei der Installation über Homebrew ist dieser Schritt nicht nötig – das Quarantine-Flag wird automatisch entfernt.
