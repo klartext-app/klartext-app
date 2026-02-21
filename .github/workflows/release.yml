@@ -26,7 +26,7 @@ jobs:
       - name: Build CodeMirror bundle
         run: |
           cd editor-bundle
-          npm ci
+          npm install
           npm run build
 
       - name: Extract version from tag
