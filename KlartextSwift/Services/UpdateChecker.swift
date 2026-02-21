@@ -59,15 +59,18 @@ struct UpdateChecker {
 
     @MainActor
     private static func showUpdateAlert(version: String, downloadURL: URL, silent: Bool) {
+        let brewCommand = "brew upgrade --cask klartext"
+
         let alert = NSAlert()
         alert.messageText = "Update verfügbar: v\(version)"
-        alert.informativeText = "Du verwendest v\(currentVersion). Die neue Version v\(version) ist verfügbar."
-        alert.addButton(withTitle: "Herunterladen")
+        alert.informativeText = "Du verwendest v\(currentVersion). Führe folgenden Befehl im Terminal aus:\n\n\(brewCommand)"
+        alert.addButton(withTitle: "Befehl kopieren")
         alert.addButton(withTitle: "Später")
         alert.alertStyle = .informational
 
         if alert.runModal() == .alertFirstButtonReturn {
-            NSWorkspace.shared.open(downloadURL)
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(brewCommand, forType: .string)
         }
     }
 
