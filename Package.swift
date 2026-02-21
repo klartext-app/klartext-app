@@ -12,7 +12,8 @@ let package = Package(
             path: "KlartextSwift",
             exclude: ["Info.plist"],
             resources: [
-                .copy("Resources/editor")
+                .copy("Resources/editor"),
+                .copy("Resources/AppIcon.icns")
             ]
         ),
     ]
