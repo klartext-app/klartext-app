@@ -1,7 +1,7 @@
 # Homebrew Cask für Klartext (macOS)
 # Dieses Cask gehört in ein Tap-Repo (homebrew-klartext).
 cask "klartext" do
-  version "0.2.0"
+  version "0.2.4"
 
   sha256 "PLACEHOLDER"
 
