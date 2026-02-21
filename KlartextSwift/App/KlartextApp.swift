@@ -1,10 +1,16 @@
 import SwiftUI
 import AppKit
+import Sparkle
 
 @main
 struct KlartextApp: App {
     @StateObject private var appState = AppState()
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    private let updaterController = SPUStandardUpdaterController(
+        startingUpdater: true,
+        updaterDelegate: nil,
+        userDriverDelegate: nil
+    )
 
     var body: some Scene {
         WindowGroup {
@@ -33,6 +39,12 @@ struct KlartextApp: App {
                     Task { await appState.openFile() }
                 }
                 .keyboardShortcut("o", modifiers: .command)
+            }
+            CommandGroup(after: .appInfo) {
+                Button("Nach Updates suchen…") {
+                    updaterController.updater.checkForUpdates()
+                }
+                .disabled(!updaterController.updater.canCheckForUpdates)
             }
         }
     }

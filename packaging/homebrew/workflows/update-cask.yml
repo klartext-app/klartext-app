@@ -1,0 +1,34 @@
+name: Update Cask
+
+on:
+  repository_dispatch:
+    types: [new-release]
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compute SHA256
+        id: sha
+        run: |
+          VERSION="${{ github.event.client_payload.version }}"
+          URL="https://github.com/klartext-app/klartext-app/releases/download/v${VERSION}/Klartext_${VERSION}_aarch64.dmg"
+          SHA=$(curl -sL "$URL" | shasum -a 256 | awk '{print $1}')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "SHA256=$SHA" >> $GITHUB_OUTPUT
+
+      - name: Update klartext.rb
+        run: |
+          sed -i "s/version \".*\"/version \"${{ steps.sha.outputs.VERSION }}\"/" Casks/klartext.rb
+          sed -i "s/sha256 \".*\"/sha256 \"${{ steps.sha.outputs.SHA256 }}\"/" Casks/klartext.rb
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Casks/klartext.rb
+          git commit -m "chore: update klartext to v${{ steps.sha.outputs.VERSION }}"
+          git push

@@ -91,3 +91,54 @@ jobs:
           files: "build/Klartext_${{ steps.version.outputs.VERSION }}_aarch64.dmg"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate appcast.xml for Sparkle
+        run: |
+          VERSION="${{ steps.version.outputs.VERSION }}"
+          DMG="build/Klartext_${VERSION}_aarch64.dmg"
+          SHA256=$(shasum -a 256 "$DMG" | awk '{print $1}')
+          LENGTH=$(wc -c < "$DMG" | tr -d ' ')
+          PUBDATE=$(date -u +"%a, %d %b %Y %H:%M:%S +0000")
+
+          mkdir -p build/gh-pages
+          cat > build/gh-pages/appcast.xml <<EOF
+          <?xml version="1.0" encoding="utf-8"?>
+          <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+            <channel>
+              <title>Klartext</title>
+              <link>https://github.com/klartext-app/klartext-app</link>
+              <description>Klartext Update Feed</description>
+              <language>de</language>
+              <item>
+                <title>Klartext $VERSION</title>
+                <pubDate>$PUBDATE</pubDate>
+                <sparkle:version>$VERSION</sparkle:version>
+                <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
+                <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+                <enclosure
+                  url="https://github.com/klartext-app/klartext-app/releases/download/v${VERSION}/Klartext_${VERSION}_aarch64.dmg"
+                  sparkle:version="$VERSION"
+                  sparkle:shortVersionString="$VERSION"
+                  length="$LENGTH"
+                  type="application/octet-stream"
+                  sparkle:edSignature="not-signed"
+                />
+              </item>
+            </channel>
+          </rss>
+          EOF
+
+      - name: Deploy appcast.xml to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: build/gh-pages
+          keep_files: true
+
+      - name: Trigger Homebrew Cask Update
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.HOMEBREW_TAP_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/klartext-app/homebrew-klartext/dispatches \
+            -d "{\"event_type\":\"new-release\",\"client_payload\":{\"version\":\"${{ steps.version.outputs.VERSION }}\"}}"
