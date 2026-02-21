@@ -1,0 +1,25 @@
+---
+description: Release-Prozess für Klartext – immer klartext.rb aktualisieren
+alwaysApply: true
+---
+
+# Release-Prozess
+
+Bei jedem neuen Git-Tag/Release IMMER diese Schritte ausführen:
+
+1. **Tag pushen** (`git tag vX.Y.Z && git push origin vX.Y.Z`)
+2. **Warten bis GitHub Actions fertig ist** und DMG verfügbar ist
+3. **SHA256 berechnen** vom neuen DMG:
+   ```bash
+   curl -L -o /tmp/klartext.dmg "https://github.com/klartext-app/klartext-app/releases/download/vX.Y.Z/Klartext_X.Y.Z_aarch64.dmg"
+   shasum -a 256 /tmp/klartext.dmg
+   ```
+4. **`packaging/homebrew/Casks/klartext.rb`** im Haupt-Repo mit neuer Version + SHA256 aktualisieren und pushen
+5. **Tap-Repo aktualisieren** (`$(brew --repository)/Library/Taps/klartext-app/homebrew-klartext`):
+   ```bash
+   TAP="$(brew --repository)/Library/Taps/klartext-app/homebrew-klartext"
+   cp packaging/homebrew/Casks/klartext.rb "$TAP/Casks/klartext.rb"
+   cd "$TAP" && git add Casks/klartext.rb && git commit -m "chore: update klartext to vX.Y.Z" && git push origin main
+   ```
+
+**Nie** einen Release abschließen ohne beide `klartext.rb` Dateien aktualisiert zu haben.
