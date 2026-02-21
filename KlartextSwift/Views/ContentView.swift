@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct ContentView: View {
     @EnvironmentObject var appState: AppState
@@ -90,6 +91,19 @@ struct ContentView: View {
         .background(Color(red: 0.06, green: 0.07, blue: 0.10))
         .preferredColorScheme(.dark)
         .overlay(settingsOverlay)
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                guard let window = NSApp.keyWindow else {
+                    print("[Zoom] keyWindow ist nil!")
+                    return
+                }
+                print("[Zoom] Fenster gefunden: \(window), contentView: \(String(describing: window.contentView))")
+                window.collectionBehavior.insert(.fullScreenPrimary)
+                let recognizer = ToolbarDoubleClickRecognizer()
+                window.contentView?.addGestureRecognizer(recognizer)
+                print("[Zoom] Recognizer hinzugefügt")
+            }
+        }
         .onChange(of: appState.activeId) { _ in
             updateOutline()
         }
@@ -157,6 +171,43 @@ struct ContentView: View {
                     appState.activeId = tab.id
                 }
             }
+        }
+    }
+}
+
+private class ToolbarDoubleClickRecognizer: NSClickGestureRecognizer {
+    private var savedFrame: NSRect? = nil
+
+    init() {
+        super.init(target: nil, action: nil)
+        self.numberOfClicksRequired = 2
+        self.target = self
+        self.action = #selector(handleDoubleClick(_:))
+        // Klicks nicht blockieren – sofort durchlassen
+        self.delaysPrimaryMouseButtonEvents = false
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func shouldBeRequiredToFail(by otherGestureRecognizer: NSGestureRecognizer) -> Bool {
+        return false
+    }
+
+    override func shouldRequireFailure(of otherGestureRecognizer: NSGestureRecognizer) -> Bool {
+        return false
+    }
+
+    @objc func handleDoubleClick(_ sender: NSClickGestureRecognizer) {
+        guard let contentView = sender.view, let window = contentView.window else { return }
+        let location = sender.location(in: contentView)
+        guard location.y <= 44 else { return }
+
+        if let saved = savedFrame {
+            window.setFrame(saved, display: true, animate: true)
+            savedFrame = nil
+        } else {
+            savedFrame = window.frame
+            window.zoom(nil)
         }
     }
 }

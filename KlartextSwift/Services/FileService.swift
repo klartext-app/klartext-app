@@ -57,11 +57,11 @@ class FileService {
         }
     }
 
-    func saveFile(path: String?, content: String) async throws -> String {
+    func saveFile(path: String?, content: String, suggestedName: String? = nil, language: DocumentLanguage = .plaintext) async throws -> String {
         if let path = path {
             return try await saveToPath(path: path, content: content)
         } else {
-            return try await saveAsDialog(content: content)
+            return try await saveAsDialog(content: content, suggestedName: suggestedName, language: language)
         }
     }
 
@@ -76,12 +76,12 @@ class FileService {
         }
     }
 
-    private func saveAsDialog(content: String) async throws -> String {
+    private func saveAsDialog(content: String, suggestedName: String? = nil, language: DocumentLanguage = .plaintext) async throws -> String {
         return try await withCheckedThrowingContinuation { continuation in
             DispatchQueue.main.async {
                 let panel = NSSavePanel()
                 panel.title = "Datei speichern"
-                panel.nameFieldStringValue = "Unbenannt.json"
+                panel.nameFieldStringValue = self.buildFileName(suggestedName: suggestedName, language: language)
 
                 guard panel.runModal() == .OK, let url = panel.url else {
                     continuation.resume(throwing: FileServiceError.cancelled)
@@ -96,6 +96,20 @@ class FileService {
                 }
             }
         }
+    }
+
+    private func buildFileName(suggestedName: String?, language: DocumentLanguage) -> String {
+        let ext = language.fileExtension
+        var base = suggestedName ?? "Unbenannt"
+
+        // Vorhandene Endung entfernen falls vorhanden
+        let knownExtensions = ["json", "xml", "xsl", "yaml", "yml", "txt"]
+        let currentExt = URL(fileURLWithPath: base).pathExtension.lowercased()
+        if knownExtensions.contains(currentExt) {
+            base = URL(fileURLWithPath: base).deletingPathExtension().lastPathComponent
+        }
+
+        return "\(base).\(ext)"
     }
 
     func fileName(from path: String) -> String {

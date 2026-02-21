@@ -1,14 +1,19 @@
 import SwiftUI
+import AppKit
 
 @main
 struct KlartextApp: App {
     @StateObject private var appState = AppState()
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(appState)
                 .frame(minWidth: 700, minHeight: 450)
+                .onAppear {
+                    NSApp.windows.forEach { configureWindow($0) }
+                }
         }
         .windowStyle(.hiddenTitleBar)
         .commands {
@@ -30,5 +35,24 @@ struct KlartextApp: App {
                 .keyboardShortcut("o", modifiers: .command)
             }
         }
+    }
+}
+
+private func configureWindow(_ window: NSWindow) {
+    window.collectionBehavior.insert(.fullScreenPrimary)
+    window.isMovableByWindowBackground = true
+}
+
+class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
+        if !hasVisibleWindows {
+            sender.windows.first?.makeKeyAndOrderFront(nil)
+        }
+        return true
     }
 }

@@ -28,6 +28,7 @@ const midnightHighlight = HighlightStyle.define([
   { tag: tags.comment, color: "#546e7a", fontStyle: "italic" },
   { tag: tags.punctuation, color: "#808080" },
   { tag: tags.operator, color: "#89ddff" },
+  { tag: tags.content, color: "#e6e6e6" },
 ]);
 
 function getLanguageExtension(lang) {
@@ -58,8 +59,13 @@ function createEditor(initialContent, language, fontSize) {
   const container = document.getElementById("editor");
 
   const updateListener = EditorView.updateListener.of((update) => {
-    if (update.docChanged && onChangeCallback) {
-      onChangeCallback(update.state.doc.toString());
+    if (update.docChanged) {
+      const content = update.state.doc.toString();
+      if (onChangeCallback) onChangeCallback(content);
+      // Swift Bridge
+      if (window.webkit?.messageHandlers?.contentChanged) {
+        window.webkit.messageHandlers.contentChanged.postMessage(content);
+      }
     }
   });
 
@@ -88,7 +94,7 @@ function createEditor(initialContent, language, fontSize) {
       EditorView.lineWrapping,
       EditorView.theme({
         "&": { backgroundColor: "#0f111a", height: "100%" },
-        ".cm-content": { caretColor: "#7eb8da", padding: "12px 0" },
+        ".cm-content": { caretColor: "#7eb8da", padding: "12px 0", color: "#e6e6e6" },
         ".cm-focused .cm-cursor": { borderLeftColor: "#7eb8da" },
         ".cm-focused .cm-selectionBackground, .cm-selectionBackground": {
           background: "#1e3a5f"
@@ -136,7 +142,17 @@ window.KlartextEditorAPI = {
 
   setLanguage(lang) {
     if (!view) return;
+    const currentContent = view.state.doc.toString();
     view.dispatch({
+      changes: { from: 0, to: view.state.doc.length, insert: currentContent },
+      effects: languageCompartment.reconfigure(getLanguageExtension(lang)),
+    });
+  },
+
+  setContentAndLanguage(content, lang) {
+    if (!view) return;
+    view.dispatch({
+      changes: { from: 0, to: view.state.doc.length, insert: content },
       effects: languageCompartment.reconfigure(getLanguageExtension(lang)),
     });
   },

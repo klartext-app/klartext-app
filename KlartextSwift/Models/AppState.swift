@@ -14,6 +14,7 @@ class AppState: ObservableObject {
     @Published var diffOriginalContent: String = ""
 
     let settings = AppSettings.shared
+    @Published var fontSize: Int = AppSettings.shared.fontSize
 
     private var autoSaveTimer: Timer? = nil
     private var errorTimer: Timer? = nil
@@ -35,6 +36,10 @@ class AppState: ObservableObject {
         $tabs
             .debounce(for: .milliseconds(500), scheduler: RunLoop.main)
             .sink { [weak self] _ in self?.persistTabs() }
+            .store(in: &cancellables)
+
+        settings.$fontSize
+            .sink { [weak self] size in self?.fontSize = size }
             .store(in: &cancellables)
     }
 
@@ -105,8 +110,14 @@ class AppState: ObservableObject {
 
     func saveActiveTab() async {
         let content = getEditorContent?() ?? activeTab.content
+        let tab = activeTab
         do {
-            let path = try await FileService.shared.saveFile(path: activeTab.filePath, content: content)
+            let path = try await FileService.shared.saveFile(
+                path: tab.filePath,
+                content: content,
+                suggestedName: tab.title,
+                language: tab.language
+            )
             guard let idx = tabs.firstIndex(where: { $0.id == activeId }) else { return }
             tabs[idx].filePath = path
             tabs[idx].title = FileService.shared.fileName(from: path)
@@ -191,12 +202,14 @@ class AppState: ObservableObject {
         diffMode = true
     }
 
+    var setEditorContentAndLanguage: ((String, DocumentLanguage) -> Void)? = nil
+
     func applyFormattedContent(_ content: String, language: DocumentLanguage) {
-        setEditorContent?(content)
         guard let idx = tabs.firstIndex(where: { $0.id == activeId }) else { return }
         tabs[idx].content = content
         tabs[idx].language = language
         tabs[idx].dirty = true
+        setEditorContentAndLanguage?(content, language)
     }
 
     // MARK: - JS-Bridge Requests (YAML via WebView)

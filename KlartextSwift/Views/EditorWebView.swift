@@ -26,6 +26,9 @@ struct EditorWebView: NSViewRepresentable {
         appState.setEditorContent = { [weak coordinator] content in
             coordinator?.setContent(content)
         }
+        appState.setEditorContentAndLanguage = { [weak coordinator] content, language in
+            coordinator?.setContentAndLanguage(content, language: language)
+        }
         appState.onRequestJsOperation = { [weak coordinator] operation, content in
             coordinator?.runJsOperation(operation, content: content)
         }
@@ -40,18 +43,52 @@ struct EditorWebView: NSViewRepresentable {
             tabId: tab.id,
             content: tab.content,
             language: tab.language,
-            fontSize: appState.settings.fontSize
+            fontSize: appState.fontSize
         )
     }
 
     private func loadEditor(webView: WKWebView, coordinator: Coordinator) {
-        guard let htmlURL = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "editor") else {
-            // Fallback: inline minimal editor
+        let htmlURL = Self.findEditorHTML()
+
+        guard let htmlURL else {
             let html = coordinator.inlineFallbackHTML()
             webView.loadHTMLString(html, baseURL: nil)
             return
         }
+
+        let navDelegate = EditorNavigationDelegate()
+        navDelegate.onLoad = { [weak coordinator] in coordinator?.editorDidLoad() }
+        coordinator.navigationDelegate = navDelegate
+        webView.navigationDelegate = navDelegate
+
         webView.loadFileURL(htmlURL, allowingReadAccessTo: htmlURL.deletingLastPathComponent())
+    }
+
+    private static func findEditorHTML() -> URL? {
+        // 1. Über Bundle.module (Swift Package Ressourcen-Accessor)
+        if let url = Bundle.module.url(forResource: "index", withExtension: "html", subdirectory: "editor") {
+            return url
+        }
+
+        // 2. Alle geladenen Bundles durchsuchen
+        let candidates = Bundle.allBundles + Bundle.allFrameworks
+        for bundle in candidates {
+            if let url = bundle.url(forResource: "index", withExtension: "html", subdirectory: "editor") {
+                return url
+            }
+        }
+
+        // 3. Relativ zur Executable: KlartextSwift_KlartextSwift.bundle liegt neben der Binary
+        let execURL = Bundle.main.executableURL ?? URL(fileURLWithPath: CommandLine.arguments[0])
+        let bundleURL = execURL
+            .deletingLastPathComponent()
+            .appendingPathComponent("KlartextSwift_KlartextSwift.bundle")
+        if let bundle = Bundle(url: bundleURL),
+           let url = bundle.url(forResource: "index", withExtension: "html", subdirectory: "editor") {
+            return url
+        }
+
+        return nil
     }
 
     // MARK: - Coordinator
@@ -60,6 +97,7 @@ struct EditorWebView: NSViewRepresentable {
         weak var webView: WKWebView?
         var appState: AppState
         var cachedContent: String = ""
+        var navigationDelegate: EditorNavigationDelegate?
         private var lastTabId: UUID? = nil
         private var lastLanguage: DocumentLanguage = .plaintext
         private var lastFontSize: Int = 14
@@ -79,11 +117,12 @@ struct EditorWebView: NSViewRepresentable {
 
         func updateIfNeeded(tabId: UUID, content: String, language: DocumentLanguage, fontSize: Int) {
             let tabChanged = tabId != lastTabId
-            let langChanged = language != lastLanguage
             let fontChanged = fontSize != lastFontSize
 
             if tabChanged {
                 lastTabId = tabId
+                lastLanguage = language
+                lastFontSize = fontSize
                 cachedContent = content
                 if editorReady {
                     initEditor(content: content, language: language, fontSize: fontSize)
@@ -92,11 +131,8 @@ struct EditorWebView: NSViewRepresentable {
                         self?.initEditor(content: content, language: language, fontSize: fontSize)
                     }
                 }
-            } else if langChanged {
-                lastLanguage = language
-                setLanguage(language)
             }
-            if fontChanged {
+            if fontChanged && !tabChanged {
                 lastFontSize = fontSize
                 setFontSize(fontSize)
             }
@@ -116,7 +152,15 @@ struct EditorWebView: NSViewRepresentable {
             webView?.evaluateJavaScript("window.KlartextEditorAPI.setValue('\(escaped)');", completionHandler: nil)
         }
 
+        func setContentAndLanguage(_ content: String, language: DocumentLanguage) {
+            lastLanguage = language
+            cachedContent = content
+            let escaped = jsEscape(content)
+            webView?.evaluateJavaScript("window.KlartextEditorAPI.setContentAndLanguage('\(escaped)', '\(language.rawValue)');", completionHandler: nil)
+        }
+
         func setLanguage(_ language: DocumentLanguage) {
+            lastLanguage = language
             webView?.evaluateJavaScript("window.KlartextEditorAPI.setLanguage('\(language.rawValue)');", completionHandler: nil)
         }
 

@@ -31,6 +31,9 @@ class AppSettings: ObservableObject {
     @Published var autoSave: Bool {
         didSet { UserDefaults.standard.set(autoSave, forKey: "klartext-auto-save") }
     }
+    @Published var autoFormat: Bool {
+        didSet { UserDefaults.standard.set(autoFormat, forKey: "klartext-auto-format") }
+    }
     @Published var fontSize: Int {
         didSet { UserDefaults.standard.set(fontSize, forKey: "klartext-font-size") }
     }
@@ -43,6 +46,7 @@ class AppSettings: ObservableObject {
         favoriteXml = ud.object(forKey: "klartext-fav-xml") as? Bool ?? true
         favoriteYaml = ud.object(forKey: "klartext-fav-yaml") as? Bool ?? false
         autoSave = ud.bool(forKey: "klartext-auto-save")
+        autoFormat = ud.bool(forKey: "klartext-auto-format")
         let fs = ud.integer(forKey: "klartext-font-size")
         fontSize = fs == 0 ? 14 : max(10, min(28, fs))
     }

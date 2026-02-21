@@ -15,6 +15,15 @@ enum DocumentLanguage: String, Codable, CaseIterable {
         }
     }
 
+    var fileExtension: String {
+        switch self {
+        case .plaintext: return "txt"
+        case .json: return "json"
+        case .xml: return "xml"
+        case .yaml: return "yaml"
+        }
+    }
+
     static func from(fileExtension ext: String) -> DocumentLanguage {
         switch ext.lowercased() {
         case "json": return .json

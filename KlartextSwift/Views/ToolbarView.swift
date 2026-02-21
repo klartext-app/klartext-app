@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct ToolbarView: View {
     @EnvironmentObject var appState: AppState
@@ -66,7 +67,7 @@ struct ToolbarView: View {
             Divider().frame(height: 20).padding(.horizontal, 4)
 
             // Auto-Format Toggle
-            Toggle(isOn: .constant(false)) {
+            Toggle(isOn: $settings.autoFormat) {
                 Text(settings.label("Auto-Format", "Auto-format"))
                     .font(.system(size: 11))
                     .foregroundColor(Color(white: 0.7))
@@ -113,7 +114,28 @@ struct ToolbarView: View {
         }
         .padding(.horizontal, 8)
         .frame(height: 44)
-        .background(.ultraThinMaterial)
+        .background(DoubleClickBackground())
+    }
+}
+
+// NSView-Subclass die Doppelklick abfängt und Vollbild togglet
+private struct DoubleClickBackground: NSViewRepresentable {
+    func makeNSView(context: Context) -> DoubleClickView {
+        let view = DoubleClickView()
+        view.wantsLayer = true
+        view.layer?.backgroundColor = NSColor.clear.cgColor
+        return view
+    }
+    func updateNSView(_ nsView: DoubleClickView, context: Context) {}
+}
+
+private class DoubleClickView: NSView {
+    override func mouseDown(with event: NSEvent) {
+        if event.clickCount == 2 {
+            window?.toggleFullScreen(nil)
+        } else {
+            super.mouseDown(with: event)
+        }
     }
 }
 
