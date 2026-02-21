@@ -65,20 +65,29 @@ struct EditorWebView: NSViewRepresentable {
     }
 
     private static func findEditorHTML() -> URL? {
-        // 1. Über Bundle.module (Swift Package Ressourcen-Accessor)
-        if let url = Bundle.module.url(forResource: "index", withExtension: "html", subdirectory: "editor") {
+        // 1. Direkt in Contents/Resources/editor/ (Release .app Bundle)
+        if let url = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "editor") {
             return url
         }
 
-        // 2. Alle geladenen Bundles durchsuchen
-        let candidates = Bundle.allBundles + Bundle.allFrameworks
-        for bundle in candidates {
+        // 2. Swift Package Bundle (Xcode Dev-Build) – nur wenn verfügbar
+        let moduleBundle: Bundle? = {
+            // Bundle.module crasht im Release wenn kein SPM-Bundle vorhanden
+            // daher über den Bundle-Namen suchen
+            return Bundle.allBundles.first { $0.bundleURL.lastPathComponent.contains("KlartextSwift") }
+        }()
+        if let url = moduleBundle?.url(forResource: "index", withExtension: "html", subdirectory: "editor") {
+            return url
+        }
+
+        // 3. Alle geladenen Bundles durchsuchen
+        for bundle in Bundle.allBundles + Bundle.allFrameworks {
             if let url = bundle.url(forResource: "index", withExtension: "html", subdirectory: "editor") {
                 return url
             }
         }
 
-        // 3. Relativ zur Executable: KlartextSwift_KlartextSwift.bundle liegt neben der Binary
+        // 4. KlartextSwift_KlartextSwift.bundle neben der Binary
         let execURL = Bundle.main.executableURL ?? URL(fileURLWithPath: CommandLine.arguments[0])
         let bundleURL = execURL
             .deletingLastPathComponent()

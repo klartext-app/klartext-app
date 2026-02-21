@@ -55,9 +55,15 @@ jobs:
           # Info.plist
           cp KlartextSwift/Info.plist "$APP/Contents/Info.plist"
 
-          # Editor resources
+          # Editor resources direkt in Contents/Resources/editor (Bundle.main findet sie so)
           cp KlartextSwift/Resources/editor/index.html "$APP/Contents/Resources/editor/"
           cp KlartextSwift/Resources/editor/codemirror.bundle.js "$APP/Contents/Resources/editor/"
+
+          # SPM-Bundle für Dev-Kompatibilität ebenfalls einbetten
+          BUNDLE="$APP/Contents/Resources/KlartextSwift_KlartextSwift.bundle"
+          mkdir -p "$BUNDLE/Contents/Resources/editor"
+          cp KlartextSwift/Resources/editor/index.html "$BUNDLE/Contents/Resources/editor/"
+          cp KlartextSwift/Resources/editor/codemirror.bundle.js "$BUNDLE/Contents/Resources/editor/"
 
       - name: Create DMG
         run: |
