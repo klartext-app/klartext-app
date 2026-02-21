@@ -15,7 +15,7 @@ Moderner Texteditor mit JSON/XML/YAML-Formatierung für macOS. Gebaut mit Swift 
 - **Drag & Drop** für JSON/XML/YAML/TXT-Dateien
 - **Dateiverknüpfungen** für .json, .xml, .yaml
 - **Einstellungen**: Sprache (DE/EN), Favorisierte Formate, Auto-Save
-- **In-App-Updates** via Sparkle
+- **In-App-Updates** (Update-Check via GitHub API)
 - **Schriftgröße** anpassbar (10–28 px)
 
 ## Voraussetzungen
@@ -73,6 +73,8 @@ git push origin v0.2.0
 brew tap klartext-app/klartext
 brew install --cask klartext
 ```
+
+> **Hinweis:** Während der Installation kann macOS fragen ob Git auf den Schlüsselbund zugreifen darf (`git-credential-osxkeychain`). Das ist eine normale macOS-Sicherheitsabfrage – du kannst sie mit **„Nicht erlauben"** ablehnen. Die Installation läuft trotzdem vollständig durch, da das Tap-Repo öffentlich ist und keine Anmeldung benötigt.
 
 ## Installation (manuell)
 
