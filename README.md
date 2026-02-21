@@ -5,7 +5,7 @@ Moderner Texteditor mit JSON/XML/YAML-Formatierung für macOS. Gebaut mit Swift 
 ## Features
 
 - **JSON, XML, YAML** formatieren und minifizieren
-- **Konvertierungen**: JSON↔YAML
+- **Konvertierungen**: JSON↔YAML, JSON↔XML
 - **Auto-Format** beim Einfügen (konfigurierbar)
 - **Tabs** mit Dirty-Indikator, Session-Persistenz und Rechtsklick-Umbenennung
 - **Sidebar** mit Document Outline (JSON/XML-Struktur)
