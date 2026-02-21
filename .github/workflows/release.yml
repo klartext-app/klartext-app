@@ -1,0 +1,84 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Install Node.js (for editor bundle)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Build CodeMirror bundle
+        run: |
+          cd editor-bundle
+          npm ci
+          npm run build
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Update version in Info.plist
+        run: |
+          /usr/libexec/PlistBuddy -c \
+            "Set :CFBundleShortVersionString ${{ steps.version.outputs.VERSION }}" \
+            KlartextSwift/Info.plist
+          /usr/libexec/PlistBuddy -c \
+            "Set :CFBundleVersion ${{ steps.version.outputs.VERSION }}" \
+            KlartextSwift/Info.plist
+
+      - name: Build archive
+        run: |
+          xcodebuild archive \
+            -project KlartextSwift.xcodeproj \
+            -scheme KlartextSwift \
+            -configuration Release \
+            -archivePath build/Klartext.xcarchive \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Export .app
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath build/Klartext.xcarchive \
+            -exportPath build/export \
+            -exportOptionsPlist ExportOptions.plist
+
+      - name: Create DMG
+        run: |
+          mkdir -p build/dmg
+          cp -R "build/export/Klartext.app" build/dmg/
+          ln -s /Applications build/dmg/Applications
+          hdiutil create \
+            -volname "Klartext ${{ steps.version.outputs.VERSION }}" \
+            -srcfolder build/dmg \
+            -ov \
+            -format UDZO \
+            "build/Klartext_${{ steps.version.outputs.VERSION }}_aarch64.dmg"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Klartext ${{ github.ref_name }}"
+          body: "Siehe Assets für den Installer (macOS .dmg)."
+          draft: false
+          prerelease: false
+          files: "build/Klartext_${{ steps.version.outputs.VERSION }}_aarch64.dmg"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

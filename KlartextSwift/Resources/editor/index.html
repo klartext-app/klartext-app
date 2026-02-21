@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Editor</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; background: #0f111a; }
+  #editor { height: 100vh; }
+
+  .cm-editor {
+    height: 100%;
+    font-family: "Cascadia Code", "Fira Code", "Menlo", "Monaco", monospace !important;
+  }
+  .cm-scroller { overflow: auto; }
+  .cm-focused { outline: none !important; }
+
+  /* Midnight Theme */
+  .cm-editor.midnight .cm-content { color: #e6e6e6; }
+  .cm-editor.midnight { background-color: #0f111a; }
+  .cm-editor.midnight .cm-gutters { background-color: #0f111a; color: #555; border-right: 1px solid #1e2030; }
+  .cm-editor.midnight .cm-activeLineGutter { background-color: #141720; }
+  .cm-editor.midnight .cm-activeLine { background-color: #141720; }
+  .cm-editor.midnight .cm-cursor { border-left-color: #7eb8da; }
+  .cm-editor.midnight .cm-selectionBackground { background-color: #1e3a5f !important; }
+  .cm-editor.midnight .cm-matchingBracket { background-color: #2a3550 !important; color: inherit !important; }
+
+  /* Search highlight */
+  .cm-searchMatch { background-color: #3a2d1a !important; }
+  .cm-searchMatch.cm-searchMatch-selected { background-color: #7a5c1a !important; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #0f111a; }
+  ::-webkit-scrollbar-thumb { background: #2e3347; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #3e4460; }
+</style>
+</head>
+<body>
+<div id="editor"></div>
+<script src="codemirror.bundle.js"></script>
+</body>
+</html>

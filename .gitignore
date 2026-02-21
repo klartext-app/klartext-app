@@ -1,0 +1,27 @@
+# Xcode
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+build/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+*.xcarchive
+
+# Swift Package Manager
+.build/
+.swiftpm/
+*.resolved
+
+# Node / editor-bundle
+editor-bundle/node_modules/
+editor-bundle/.cache/
+
+# macOS
+.DS_Store
+*.orig
+
+# Sparkle keys (privat)
+*.eddsa
+sparkle_private_key.txt
