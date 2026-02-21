@@ -12,6 +12,12 @@ cask "klartext" do
 
   app "Klartext.app"
 
+  postflight do
+    system_command "/usr/bin/xattr",
+      args: ["-r", "-d", "com.apple.quarantine", "#{appdir}/Klartext.app"],
+      sudo: false
+  end
+
   zap trash: [
     "~/Library/Application Support/com.recorz.klartext",
     "~/Library/Preferences/com.recorz.klartext.plist",
