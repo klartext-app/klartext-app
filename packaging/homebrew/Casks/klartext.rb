@@ -1,9 +1,9 @@
 # Homebrew Cask für Klartext (macOS)
 # Dieses Cask gehört in ein Tap-Repo (homebrew-klartext).
 cask "klartext" do
-  version "0.2.7"
+  version "0.2.8"
 
-  sha256 "a374b1dd10bac54a5ad85514725f139dbb98bff199aa5146f1333491ff4acc98"
+  sha256 "10ed80c7b94055e452dda0dcaeba6daf0f10eeb1e463dab058575a643cc54844"
 
   url "https://github.com/klartext-app/klartext-app/releases/download/v#{version}/Klartext_#{version}_aarch64.dmg"
   name "Klartext"
