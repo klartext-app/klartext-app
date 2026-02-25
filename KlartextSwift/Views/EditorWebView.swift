@@ -39,9 +39,11 @@ struct EditorWebView: NSViewRepresentable {
 
     func updateNSView(_ nsView: WKWebView, context: Context) {
         let tab = appState.activeTab
+        let content = tab.content
+        let tabId = tab.id
         context.coordinator.updateIfNeeded(
-            tabId: tab.id,
-            content: tab.content,
+            tabId: tabId,
+            content: content,
             language: tab.language,
             fontSize: appState.fontSize
         )
@@ -126,6 +128,7 @@ struct EditorWebView: NSViewRepresentable {
 
         func updateIfNeeded(tabId: UUID, content: String, language: DocumentLanguage, fontSize: Int) {
             let tabChanged = tabId != lastTabId
+            let langChanged = language != lastLanguage
             let fontChanged = fontSize != lastFontSize
 
             if tabChanged {
@@ -133,15 +136,26 @@ struct EditorWebView: NSViewRepresentable {
                 lastLanguage = language
                 lastFontSize = fontSize
                 cachedContent = content
+                let capturedContent = content
+                let capturedLanguage = language
+                let capturedFontSize = fontSize
                 if editorReady {
-                    initEditor(content: content, language: language, fontSize: fontSize)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+                        self?.initEditor(content: capturedContent, language: capturedLanguage, fontSize: capturedFontSize)
+                    }
                 } else {
                     pendingInit = { [weak self] in
-                        self?.initEditor(content: content, language: language, fontSize: fontSize)
+                        self?.initEditor(content: capturedContent, language: capturedLanguage, fontSize: capturedFontSize)
                     }
                 }
+                return
             }
-            if fontChanged && !tabChanged {
+            if langChanged {
+                lastLanguage = language
+                cachedContent = content
+                setContentAndLanguage(content, language: language)
+            }
+            if fontChanged {
                 lastFontSize = fontSize
                 setFontSize(fontSize)
             }
@@ -228,8 +242,19 @@ struct EditorWebView: NSViewRepresentable {
                     DispatchQueue.main.async { [weak self] in
                         guard let self else { return }
                         if let idx = self.appState.tabs.firstIndex(where: { $0.id == self.appState.activeId }) {
+                            let oldContent = self.appState.tabs[idx].content
                             self.appState.tabs[idx].content = content
                             self.appState.tabs[idx].dirty = true
+
+                            // Sprache neu erkennen wenn sich der Content-Typ geändert hat
+                            let detected = DocumentLanguage.detect(from: content)
+                            let currentLang = self.appState.tabs[idx].language
+                            let oldDetected = DocumentLanguage.detect(from: oldContent)
+                            if detected != .plaintext && detected != currentLang && detected != oldDetected {
+                                self.appState.tabs[idx].language = detected
+                                self.lastLanguage = detected
+                                self.setLanguage(detected)
+                            }
                         }
                     }
                 }

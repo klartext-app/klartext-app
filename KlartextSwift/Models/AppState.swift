@@ -135,11 +135,13 @@ class AppState: ObservableObject {
 
     func formatJson() {
         let content = getEditorContent?() ?? activeTab.content
+        // Tatsächliche Sprache des Contents erkennen, nicht nur Tab-Sprache
+        let detectedLang = DocumentLanguage.detect(from: content)
+        let sourceLang = detectedLang != .plaintext ? detectedLang : activeTab.language
         do {
             let result: String
-            switch activeTab.language {
+            switch sourceLang {
             case .yaml:
-                // YAML→JSON via JS-Bridge
                 requestYamlToJson(content)
                 return
             case .xml:
@@ -155,11 +157,17 @@ class AppState: ObservableObject {
 
     func formatXml() {
         let content = getEditorContent?() ?? activeTab.content
+        let detectedLang = DocumentLanguage.detect(from: content)
+        let sourceLang = detectedLang != .plaintext ? detectedLang : activeTab.language
         do {
             let result: String
-            if activeTab.language == .json {
+            switch sourceLang {
+            case .json:
                 result = try FormatterService.shared.jsonToXml(content)
-            } else {
+            case .yaml:
+                // YAML→JSON→XML wäre komplex, direkt als XML versuchen
+                result = try FormatterService.shared.formatXml(content)
+            default:
                 result = try FormatterService.shared.formatXml(content)
             }
             applyFormattedContent(result, language: .xml)
@@ -170,7 +178,9 @@ class AppState: ObservableObject {
 
     func formatYaml() {
         let content = getEditorContent?() ?? activeTab.content
-        if activeTab.language == .json {
+        let detectedLang = DocumentLanguage.detect(from: content)
+        let sourceLang = detectedLang != .plaintext ? detectedLang : activeTab.language
+        if sourceLang == .json {
             requestJsonToYaml(content)
         } else {
             requestYamlFormat(content)

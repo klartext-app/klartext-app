@@ -126,7 +126,21 @@ function createEditor(initialContent, language, fontSize) {
 // Public API exposed to Swift via WKWebView
 window.KlartextEditorAPI = {
   init(content, language, fontSize) {
-    createEditor(content, language, fontSize);
+    if (view) {
+      // Editor bereits vorhanden – Inhalt und Sprache tauschen
+      view.dispatch({
+        changes: { from: 0, to: view.state.doc.length, insert: content || "" },
+        effects: languageCompartment.reconfigure(getLanguageExtension(language)),
+      });
+      if (fontSize && fontSize !== currentFontSize) {
+        currentFontSize = fontSize;
+        view.dispatch({
+          effects: fontSizeCompartment.reconfigure(fontSizeTheme(fontSize)),
+        });
+      }
+    } else {
+      createEditor(content, language, fontSize);
+    }
   },
 
   getValue() {

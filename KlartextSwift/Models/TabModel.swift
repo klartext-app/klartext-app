@@ -33,6 +33,33 @@ enum DocumentLanguage: String, Codable, CaseIterable {
         default: return .plaintext
         }
     }
+
+    static func detect(from content: String) -> DocumentLanguage {
+        let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return .plaintext }
+
+        // XML: beginnt mit < oder <?xml
+        if trimmed.hasPrefix("<") {
+            return .xml
+        }
+
+        // JSON: beginnt mit { oder [
+        if trimmed.hasPrefix("{") || trimmed.hasPrefix("[") {
+            return .json
+        }
+
+        // YAML: hat typische Key-Value-Struktur mit : oder beginnt mit ---
+        if trimmed.hasPrefix("---") {
+            return .yaml
+        }
+        let lines = trimmed.components(separatedBy: "\n").prefix(5)
+        let yamlLike = lines.filter { $0.contains(": ") || $0.hasSuffix(":") }.count
+        if yamlLike >= 2 {
+            return .yaml
+        }
+
+        return .plaintext
+    }
 }
 
 struct TabModel: Identifiable, Codable, Equatable {
